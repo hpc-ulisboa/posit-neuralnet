@@ -1,0 +1,51 @@
+#ifndef _POSITNN_HEADER_
+#define _POSITNN_HEADER_
+
+//namespace positnn {
+
+// Activation functions
+#include "activation/LogSoftmax.hpp"
+#include "activation/ReLU.hpp"
+#include "activation/Sigmoid.hpp"
+#include "activation/Tanh.hpp"
+
+// Layers (and initialization functions and parameters)
+#include "layer/AvgPool2d.hpp"
+#include "layer/BatchNorm1d.hpp"
+#include "layer/BackScale.hpp"
+#include "layer/Conv2d.hpp"
+#include "layer/init.hpp"
+#include "layer/Layer.hpp"
+#include "layer/Linear.hpp"
+#include "layer/MaxPool2d.hpp"
+#include "layer/Parameter.hpp"
+#include "layer/RangeBatchNorm1d.hpp"
+
+// Loss functions
+#include "loss/CrossEntropyLoss.hpp"
+#include "loss/MSELoss.hpp"
+#include "loss/NLLLoss.hpp"
+
+// Optimizers
+#include "optimizer/SGD.hpp"
+
+// Tensor (StdTensor) and operations
+#include "tensor/averagepool.hpp"
+#include "tensor/convert.hpp"
+#include "tensor/convolution.hpp"
+#include "tensor/matrix.hpp"
+#include "tensor/maximumpool.hpp"
+#include "tensor/stats.hpp"
+#include "tensor/StdTensor.hpp"
+#include "tensor/Window.hpp"
+
+// Utils and misc
+#include "utils/print_parameters.hpp"
+#include "utils/save_load.hpp"
+#include "utils/train_test_threads.hpp"
+#include "utils/type_name.hpp"
+#include "utils/utils.hpp"
+
+//}
+
+#endif /* _POSITNN_HEADER_ */
