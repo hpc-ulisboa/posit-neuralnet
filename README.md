@@ -23,7 +23,10 @@ This is being developed for thesis to obtain a Master of Science Degree in Aeros
 
 ## Examples
 
-Folder "examples" includes: example of CMakeLists.txt for a project, an example of a FC Neural Network applied to the MNIST dataset, and LeNet-5 applied to the MNIST dataset. 
+Folder "examples" includes: example of CMakeLists.txt for a project, an example of a FC Neural Network applied to the MNIST dataset, and LeNet-5 applied to the MNIST dataset. To know how to run an example, check the section [Tests](#tests).
+
+- Example of training LeNet-5 on MNIST using posits
+![training lenet-5 on mnist using posits](examples/mnist_lenet5/plots/train_test_scale_loss_8_2.png?raw=true "Example of training LeNet-5 on MNIST using posits")
 
 ---
 
