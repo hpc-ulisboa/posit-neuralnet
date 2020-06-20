@@ -62,6 +62,7 @@ $ git clone https://github.com/hpc-ulisboa/posit-neuralnet.git
 - Layers: Batch Normalization, Convolution, Fully-Connected, Pooling (average and max)
 - Loss functions: Cross-Entropy, Mean Squared Error
 - Optimizer: SGD
+- Tensor class: StdTensor
 
 ## Usage
 - Copy the CMakeLists.txt inside examples and adapt to your setup, namely, the directories of universal and PositNN, and number of threads
