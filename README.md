@@ -84,10 +84,10 @@ $ cd examples/mnist_lenet5
 ../../include
 ../../universal/include
 ```
-- Build project. Specify PyTorch (LibTorch) folder. This example assumes that the folder is at the repository root directory.
+- Build project. Specify absolute path to PyTorch (LibTorch) folder. This example assumes that the folder is at the repository root directory.
 ```shell
 $ mkdir build; cd build
-$ cmake .. -DCMAKE_PREFIX_PATH="../../../libtorch"
+$ cmake .. -DCMAKE_PREFIX_PATH="/home/gonced8/posit-neuralnet/libtorch"
 $ make
 ```
 
