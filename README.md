@@ -1,139 +1,121 @@
 # PositNN
 
-Framework in C++ for Deep Learning (training and testing) using Posits 
+Framework in C++ for Deep Learning (training and testing) using Posits.
+The posits are emulated with <a href="https://github.com/stillwater-sc/universal" target="_blank">stillwater-sc/universal</a> library and the deep learning is based in PyTorch.
+
+This is being developed for thesis to obtain a Master of Science Degree in Aerospace Engineering.
 
 ---
 
 ## Table of Contents (Optional)
 
-> If your `README` has a lot of info, section headers might be nice.
-
+- [Examples](#examples)
 - [Installation](#installation)
 - [Features](#features)
+- [Usage](#usage)
+- [Tests](#tests)
 - [Contributing](#contributing)
 - [Team](#team)
-- [FAQ](#faq)
 - [Support](#support)
 - [License](#license)
 
-
 ---
 
-## Example (Optional)
+## Examples
 
-```javascript
-// code away!
-
-let generateProject = project => {
-  let code = [];
-  for (let js = 0; js < project.length; js++) {
-    code.push(js);
-  }
-};
-```
+Folder "examples" includes: example of CMakeLists.txt for a project, an example of a FC Neural Network applied to the MNIST dataset, and LeNet-5 applied to the MNIST dataset. 
 
 ---
 
 ## Installation
 
-- All the `code` required to get started
-- Images of what it should look like
+### Requirements
 
-### Clone
-
-- Clone this repo to your local machine using `https://github.com/fvcproductions/SOMEREPO`
+- <a href="https://github.com/stillwater-sc/universal" target="_blank">stillwater-sc/universal</a>
+- <a href="https://pytorch.org/get-started/locally/" target="_blank">PyTorch for C++ (LibTorch)</a>
+- <a href="https://github.com/hpc-ulisboa/posit-neuralnet" target="_blank">PositNN (this library)</a>
+- cmake >= v3
+- gcc >= v5
+- glibc >= v2.17
 
 ### Setup
 
-- If you want more syntax highlighting, format your code like this:
-
-> update and install this package first
-
+- Clone stillwater-sc/universal repository
 ```shell
-$ brew update
-$ brew install fvcproductions
+$ git clone https://github.com/stillwater-sc/universal.git
 ```
 
-> now install npm and bower packages
+- Download appropriate PyTorch for C++ (LibTorch) and unzip
 
+<a href="https://pytorch.org/get-started/locally/" target="_blank">https://pytorch.org/get-started/locally/</a>
+
+- Clone this repository
 ```shell
-$ npm install
-$ bower install
+$ git clone https://github.com/hpc-ulisboa/posit-neuralnet.git
 ```
-
-- For all the possible languages that support syntax highlithing on GitHub (which is basically all of them), refer <a href="https://github.com/github/linguist/blob/master/lib/linguist/languages.yml" target="_blank">here</a>.
 
 ---
 
 ## Features
-## Usage (Optional)
-## Documentation (Optional)
-## Tests (Optional)
+- Use any posit configuration
+- Activation functions: ReLU, Sigmoid, Tanh
+- Layers: Batch Normalization, Convolution, Fully-Connected, Pooling (average and max)
+- Loss functions: Cross-Entropy, Mean Squared Error
+- Optimizer: SGD
 
-- Going into more detail on code and technologies used
-- I utilized this nifty <a href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet" target="_blank">Markdown Cheatsheet</a> for this sample `README`.
+## Usage
+- Copy the CMakeLists.txt inside examples and adapt to your setup, namely, the directories of universal and PositNN
+- Build your project
+```shell
+$ mkdir build; cd build
+$ cmake .. -DCMAKE_PREFIX_PATH="../../libtorch"
+$ make
+```
+## Tests
+
+To check if everything is installed correctly, you can try one of the examples. The following steps describe how to test the mnist_lenet5 example.
+
+- Go to the project folder
+```shell
+$ cd examples/mnist_lenet5
+```
+- (Optional) Edit CMakeLists.txt to your configuration. Configure positnn and universal path. The one given assumes that universal folder is at the repository root directory, that is, from your current path:
+```shell
+../../include
+../../universal/include
+```
+- Build project. Specify PyTorch (LibTorch) folder. This example assumes that the folder is at the repository root directory.
+```shell
+$ mkdir build; cd build
+$ cmake .. -DCMAKE_PREFIX_PATH="../../../libtorch"
+$ make
+```
+
+- Run program. If you're saving the models, make sure the appropriate output folder exists.
+```shell
+$ ./train_test
+```
 
 ---
 
 ## Contributing
 
-> To get started...
-
-### Step 1
-
-- **Option 1**
-    - 🍴 Fork this repo!
-
-- **Option 2**
-    - 👯 Clone this repo to your local machine using `https://github.com/joanaz/HireDot2.git`
-
-### Step 2
-
-- **HACK AWAY!** 🔨🔨🔨
-
-### Step 3
-
-- 🔃 Create a new pull request using <a href="https://github.com/joanaz/HireDot2/compare/" target="_blank">`https://github.com/joanaz/HireDot2/compare/`</a>.
+If you'd like to get involved, e-mail me at gonced8@gmail.com
 
 ---
 
 ## Team
+### Student
+- Gonçalo Eduardo Cascalho Raposo - @gonced8
 
-> Or Contributors/People
-
-| <a href="http://fvcproductions.com" target="_blank">**FVCproductions**</a> | <a href="http://fvcproductions.com" target="_blank">**FVCproductions**</a> | <a href="http://fvcproductions.com" target="_blank">**FVCproductions**</a> |
-| :---: |:---:| :---:|
-| [![FVCproductions](https://avatars1.githubusercontent.com/u/4284691?v=3&s=200)](http://fvcproductions.com)    | [![FVCproductions](https://avatars1.githubusercontent.com/u/4284691?v=3&s=200)](http://fvcproductions.com) | [![FVCproductions](https://avatars1.githubusercontent.com/u/4284691?v=3&s=200)](http://fvcproductions.com)  |
-| <a href="http://github.com/fvcproductions" target="_blank">`github.com/fvcproductions`</a> | <a href="http://github.com/fvcproductions" target="_blank">`github.com/fvcproductions`</a> | <a href="http://github.com/fvcproductions" target="_blank">`github.com/fvcproductions`</a> |
-
-- You can just grab their GitHub profile image URL
-- You should probably resize their picture using `?s=200` at the end of the image URL.
-
----
-
-## FAQ
-
-- **How do I do *specifically* so and so?**
-    - No problem! Just do this.
-
+### Supervisors
+- Prof. Nuno Roma
+- Prof. Pedro Tomás - @pedrotomas
 ---
 
 ## Support
 
-Reach out to me at one of the following places!
-
-- Website at <a href="http://fvcproductions.com" target="_blank">`fvcproductions.com`</a>
-- Twitter at <a href="http://twitter.com/fvcproductions" target="_blank">`@fvcproductions`</a>
-- Insert more social links here.
-
----
-
-## Donations (Optional)
-
-- You could include a <a href="https://cdn.rawgit.com/gratipay/gratipay-badge/2.3.0/dist/gratipay.png" target="_blank">Gratipay</a> link as well.
-
-[![Support via Gratipay](https://cdn.rawgit.com/gratipay/gratipay-badge/2.3.0/dist/gratipay.png)](https://gratipay.com/fvcproductions/)
-
+Reach out to me at: gonced8@gmail.com
 
 ---
 
@@ -142,4 +124,4 @@ Reach out to me at one of the following places!
 [![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
 
 - **[MIT license](http://opensource.org/licenses/mit-license.php)**
-- Copyright 2015 © <a href="http://fvcproductions.com" target="_blank">FVCproductions</a>.
+- README.md based from <a href="https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46" target="_blank">FVCproductions</a>.
