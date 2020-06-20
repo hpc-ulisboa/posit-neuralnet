@@ -29,7 +29,7 @@ using PositSaveFile = Posit;
 // Load
 using PositLoadFile = Posit;
 #define NET_LOAD_FILENAME_FLOAT			"../net/posit_8_1/model_epoch_0_float.pt"
-//#define NET_LOAD_FILENAME_POSIT			"../net/posit_8_1/model_epoch_0_posit.dat"
+#define NET_LOAD_FILENAME_POSIT			"../net/posit_8_2/model_epoch_0_posit.dat"
 
 // String helper
 #define STR_HELPER(x) #x
@@ -43,8 +43,8 @@ using PositLoadFile = Posit;
 // Options
 #define LOAD false
 #define COPY true
-#define SAVE_UNTRAINED true
-#define SAVE_EPOCH true
+#define SAVE_UNTRAINED false
+#define SAVE_EPOCH false
 
 template <typename T>
 void save_models(size_t const epoch, FloatNet& model_float, PositNet<T>& model_posit) {

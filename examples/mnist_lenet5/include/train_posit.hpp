@@ -24,7 +24,6 @@ void train_posit(	size_t epoch,
 	model.train();
 	size_t batch_idx = 0;
 	size_t total_batch_size = 0;
-	bool first = true;
 
 	for(auto const& batch : data_loader) {
 		// Update number of trained samples

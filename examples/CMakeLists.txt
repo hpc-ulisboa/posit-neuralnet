@@ -62,7 +62,7 @@ include_directories("${CMAKE_CURRENT_LIST_DIR}/../universal/include")
 ###########################################################################
 
 # Include PositNN (PyTorch for posits) ####################################
-include_directories("${CMAKE_CURRENT_LIST_DIR}/../positnn/include")
+include_directories("${CMAKE_CURRENT_LIST_DIR}/../include")
 ###########################################################################
 
 # Setup executables #######################################################

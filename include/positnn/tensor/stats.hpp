@@ -14,7 +14,8 @@ using namespace sw::unum;
 template <typename Positi, typename Positf=Positi> 
 Positf calculate_mean(StdTensor<Positi> const& x) {
 	size_t const size = x.size();
-	quire<Positf::nbits, Positf::es, Positf::nbits-1> sum = 0;
+	quire<Positf::nbits, Positf::es, Positf::nbits-1> sum;
+	sum.reset();
 	Positf mean;
 
 	// Calculate mean
@@ -35,7 +36,8 @@ Positf calculate_var(StdTensor<Positi> const& x) {
 	Positf mean = calculate_mean<Positi, Positf>(x);
 
 	size_t const size = x.size();
-	quire<Positf::nbits, Positf::es, Positf::nbits-1> sum = 0;
+	quire<Positf::nbits, Positf::es, Positf::nbits-1> sum;
+	sum.reset();
 	Positf var;
 
 	// Calculate variance

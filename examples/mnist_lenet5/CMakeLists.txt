@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(example)
+project(mnist_lenet5)
 
 if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
@@ -58,11 +58,11 @@ include_directories("${HEADER_FOLDER}")
 ###########################################################################
 
 # Include universal (posits) ##############################################
-include_directories("${CMAKE_CURRENT_LIST_DIR}/../universal/include")
+include_directories("${CMAKE_CURRENT_LIST_DIR}/../../universal/include")
 ###########################################################################
 
 # Include PositNN (PyTorch for posits) ####################################
-include_directories("${CMAKE_CURRENT_LIST_DIR}/../positnn/include")
+include_directories("${CMAKE_CURRENT_LIST_DIR}/../../include")
 ###########################################################################
 
 # Setup executables #######################################################

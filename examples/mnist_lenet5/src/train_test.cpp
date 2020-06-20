@@ -47,8 +47,8 @@ using PositLoadFile = Posit;
 // Options
 #define LOAD false
 #define COPY true
-#define SAVE_UNTRAINED true
-#define SAVE_EPOCH true
+#define SAVE_UNTRAINED false
+#define SAVE_EPOCH false
 
 template <typename Posit>
 void save_models(size_t const epoch, LeNet5_float& model_float, LeNet5_posit<Posit>& model_posit) {
@@ -115,7 +115,7 @@ int main() {
 	const size_t train_dataset_size = train_dataset.size().value();
 
 	// Create data loader from training dataset
-	auto train_loader = torch::data::make_data_loader(
+	//auto train_loader = torch::data::make_data_loader(
 	auto train_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(
 							std::move(train_dataset),
 							torch::data::DataLoaderOptions().batch_size(kTrainBatchSize));
