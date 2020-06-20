@@ -6,9 +6,10 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Optimization flags ######################################################
-set(USE_SSE ON)
-set(USE_AVX ON)
+set(USE_SSE OFF)
+set(USE_AVX OFF)
 set(USE_AVX2 OFF)
+
 # Unix
 if(CMAKE_COMPILER_IS_GNUCXX OR MINGW OR
    CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -31,8 +32,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR MINGW OR
 	endif(USE_AVX2 AND COMPILER_HAS_AVX2_FLAG)
 endif()
 
-add_definitions(-D LL_THREADS=1)
-add_definitions(-D HL_THREADS=4)
+add_definitions(-D LL_THREADS=4)
+add_definitions(-D HL_THREADS=1)
 find_package (Threads)
 ###########################################################################
 
@@ -44,19 +45,10 @@ SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -pg")
 SET(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -pg")
 ###########################################################################
 
-# Include PyTorch library (libtorch) ######################################
-if (UNIX)
-	if(APPLE)
-		set(CMAKE_PREFIX_PATH "/Users/gonced8/uni/code/libtorch-macos")
-	else()
-		set(CMAKE_PREFIX_PATH "/home/gonced8/uni/code/libtorch-linux")
-	endif()
-endif()
-
 find_package(Torch REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
-add_definitions(-D USING_PYTORCH)	# if not using PyTorch, comment
+add_definitions(-D USING_PYTORCH)
 ###########################################################################
 
 # Set source and include folder ###########################################
@@ -74,8 +66,9 @@ include_directories("${CMAKE_CURRENT_LIST_DIR}/../positnn/include")
 ###########################################################################
 
 # Setup executables #######################################################
-#add_executable(example ${SRC_FOLDER}/example.cpp)
-#target_link_libraries(train_test ${CMAKE_THREAD_LIBS_INIT})
-#target_link_libraries(example "${TORCH_LIBRARIES}")
-#set_property(TARGET example PROPERTY CXX_STANDARD 14)
+add_executable(train_test ${SRC_FOLDER}/train_test.cpp)
+target_link_libraries(train_test ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(train_test "${TORCH_LIBRARIES}")
+set_property(TARGET train_test PROPERTY CXX_STANDARD 14)
+
 ###########################################################################
