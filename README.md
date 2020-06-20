@@ -7,7 +7,7 @@ This is being developed for thesis to obtain a Master of Science Degree in Aeros
 
 ---
 
-## Table of Contents (Optional)
+## Table of Contents
 
 - [Examples](#examples)
 - [Installation](#installation)
