@@ -64,7 +64,7 @@ $ git clone https://github.com/hpc-ulisboa/posit-neuralnet.git
 - Optimizer: SGD
 
 ## Usage
-- Copy the CMakeLists.txt inside examples and adapt to your setup, namely, the directories of universal and PositNN
+- Copy the CMakeLists.txt inside examples and adapt to your setup, namely, the directories of universal and PositNN, and number of threads
 - Build your project
 ```shell
 $ mkdir build; cd build
