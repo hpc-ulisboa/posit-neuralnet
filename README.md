@@ -64,7 +64,7 @@ $ git clone https://github.com/hpc-ulisboa/posit-neuralnet.git
 - Optimizer: SGD
 
 ## Usage
-- Copy the CMakeLists.txt inside examples and adapt to your setup, namely, the directories of universal and PositNN
+- Copy the CMakeLists.txt inside examples and adapt to your setup, namely, the directories of universal and PositNN, and number of threads
 - Build your project
 ```shell
 $ mkdir build; cd build
@@ -84,10 +84,10 @@ $ cd examples/mnist_lenet5
 ../../include
 ../../universal/include
 ```
-- Build project. Specify PyTorch (LibTorch) folder. This example assumes that the folder is at the repository root directory.
+- Build project. Specify absolute path to PyTorch (LibTorch) folder. This example assumes that the folder is at the repository root directory.
 ```shell
 $ mkdir build; cd build
-$ cmake .. -DCMAKE_PREFIX_PATH="../../../libtorch"
+$ cmake .. -DCMAKE_PREFIX_PATH="/home/gonced8/posit-neuralnet/libtorch"
 $ make
 ```
 
