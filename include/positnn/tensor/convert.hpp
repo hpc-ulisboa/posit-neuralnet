@@ -24,7 +24,7 @@ StdTensor<CustomType> Tensor_to_StdTensor(torch::Tensor& x) {
 
 template <typename CType, at::ScalarType TensorType, typename CustomType>
 torch::Tensor StdTensor_to_Tensor(StdTensor<CustomType>& x) {
-	std::vector<long> shape(x.shape().begin(), x.shape().end());	// TODO: IMPROVE THIS CONVERSION
+	std::vector<int64_t> shape(x.shape().begin(), x.shape().end());	// TODO: IMPROVE THIS CONVERSION
 	torch::Tensor y = torch::empty(shape, TensorType);
 	auto y_data = y.data_ptr<CType>();
 
