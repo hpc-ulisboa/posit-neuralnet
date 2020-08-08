@@ -24,7 +24,7 @@ StdTensor<CustomType> Tensor_to_StdTensor(torch::Tensor& x) {
 
 template <typename CType, at::ScalarType TensorType, typename CustomType>
 torch::Tensor StdTensor_to_Tensor(StdTensor<CustomType>& x) {
-	std::vector<long> shape(x.shape().begin(), x.shape().end());	// TODO: IMPROVE THIS CONVERSION
+	std::vector<int64_t> shape(x.shape().begin(), x.shape().end());
 	torch::Tensor y = torch::empty(shape, TensorType);
 	auto y_data = y.data_ptr<CType>();
 
@@ -43,10 +43,31 @@ void copy_parameters(std::vector<torch::Tensor> from, std::vector<Parameter<Posi
 	return;
 }
 
-template<typename T>
-void copy_parameters(std::vector<Parameter<T>>& from, std::vector<Parameter<T>>& to) {
+template<typename T1, typename T2=T1>
+void copy_parameters(std::vector<Parameter<T1>>& from, std::vector<Parameter<T2>>& to) {
 	for(size_t i=0, size=to.size(); i<size; i++) {
 		to[i].weight = from[i].weight;
+	}
+
+	return;
+}
+
+template<torch::Dtype dtype=torch::kFloat>
+void copy_parameters(std::vector<torch::Tensor> from, std::vector<torch::Tensor>& to) {
+	for(size_t i=0, size=to.size(); i<size; i++) {
+		if(dtype == torch::kFloat)
+			to[i] = from[i];
+		else
+			to[i] = from[i].to(dtype);
+	}
+
+	return;
+}
+
+template<typename T1, typename T2=T1>
+void copy_gradients(std::vector<Parameter<T1>>& from, std::vector<Parameter<T2>>& to) {
+	for(size_t i=0, size=to.size(); i<size; i++) {
+		to[i].gradient = from[i].gradient;
 	}
 
 	return;

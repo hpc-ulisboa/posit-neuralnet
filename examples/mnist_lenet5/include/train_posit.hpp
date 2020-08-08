@@ -46,7 +46,7 @@ void train_posit(	size_t epoch,
 #ifndef USING_HL_THREADS
 		// Forward pass
 		auto output = model.forward(data);
-		cross_entropy_loss<Posit, USInt> loss(output, target);
+		cross_entropy_loss<PositLoss, Posit, USInt> loss(output, target);
 
 		/*
 		// Setup loss scale
@@ -64,7 +64,7 @@ void train_posit(	size_t epoch,
 		// Forward and backward pass
 		std::vector<float> losses;
 		std::vector<std::vector<StdTensor<Posit>>> gradients;
-		forward_backward<cross_entropy_loss<Posit, USInt>>(model, data, target, losses, gradients);
+		forward_backward<cross_entropy_loss<PositLoss, Posit, USInt>>(model, data, target, losses, gradients);
 
 		// Sum gradients from other threads
 		sum_gradients(model.parameters(), gradients);

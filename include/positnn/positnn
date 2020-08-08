@@ -28,6 +28,7 @@
 
 // Optimizers
 #include "optimizer/SGD.hpp"
+#include "optimizer/SGDMixed.hpp"
 
 // Tensor (StdTensor) and operations
 #include "tensor/averagepool.hpp"

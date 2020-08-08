@@ -38,9 +38,9 @@ void test_posit(	PositNet<Posit>& model,
 		auto output = model.forward(data);
 
 		// Calculate loss
-		test_loss += cross_entropy_loss<Posit, long>(	output,
-														target,
-														Reduction::Sum	).template item<float>();
+		test_loss += cross_entropy_loss<PositLoss, Posit, long>(	output,
+																	target,
+																	Reduction::Sum	).template item<float>();
 	
 		auto pred = output.template argmax<long>(1);
 		correct += pred.eq(target).template sum<size_t>();

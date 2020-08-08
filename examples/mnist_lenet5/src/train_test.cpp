@@ -1,5 +1,3 @@
-//float LOSS_SCALE = 1;
-
 // General headers
 #include <iostream>
 #include <torch/torch.h>
@@ -10,7 +8,8 @@
 // Custom headers
 #include "LeNet5_float.hpp"
 #include "LeNet5_posit.hpp"
-//#include "LeNet5_posit_scaling.hpp"
+
+using PositLoss = posit<16, 1>;
 
 // Custom functions
 #include "test_float.hpp"
@@ -26,6 +25,7 @@ using namespace sw::unum;
 #define ES 		2
 using Posit = posit<NBITS, ES>;
 using PositSaveFile = Posit;
+using PositOptimizer = posit<16, 1>;
 
 // Dataset path
 #define DATASET_PATH					"../dataset"
@@ -71,6 +71,9 @@ int main() {
 
     std::cout << "MNIST Classification" << std::endl;
     std::cout << "Training and Testing on CPU." << std::endl;
+    std::cout << "Posit<" << Posit::nbits << ", " << Posit::es << ">" << std::endl;
+	std::cout << "PositLoss<" << PositLoss::nbits << ", " << PositLoss::es << ">" << std::endl;
+    std::cout << "PositOptimizer<" << PositOptimizer::nbits << ", " << PositOptimizer::es << ">" << std::endl;
 	
 	// Training and Testing settings
 	// The batch size for training.
@@ -80,7 +83,7 @@ int main() {
 	size_t const kTestBatchSize = 1024;
 	
 	// The number of epochs to train.
-	size_t const num_epochs = 15;
+	size_t const num_epochs = 10;
 
 	// After how many batches to log a new update with the loss value.
 	size_t const kLogInterval = 32;
@@ -93,6 +96,9 @@ int main() {
     LeNet5_float model_float;
 	LeNet5_posit<Posit> model_posit;
 
+	// Declare parameters to be used in optimizer (with different posit configuration)
+	LeNet5_posit<PositOptimizer> model_optimizer;
+
 	// Load net parameters from file
 	if(LOAD){
 		torch::load(model_float, NET_LOAD_FILENAME_FLOAT);
@@ -101,8 +107,11 @@ int main() {
 	}
 
 	// Initialize posit net with the same random parameters as float net
-	if(COPY)
-		copy_parameters(model_float->parameters(), model_posit.parameters());
+	if(COPY) {
+		//copy_parameters(model_float->parameters(), model_posit.parameters());
+		copy_parameters(model_float->parameters(), model_optimizer.parameters());
+		copy_parameters(model_optimizer.parameters(), model_posit.parameters());
+	}
 
 	// Save net before training
 	if(SAVE_UNTRAINED)
@@ -135,7 +144,8 @@ int main() {
 
 	// Optimizer
     torch::optim::SGD optimizer_float(model_float->parameters(), torch::optim::SGDOptions(learning_rate).momentum(momentum));
-    SGD<Posit> optimizer_posit(model_posit.parameters(), SGDOptions<Posit>(learning_rate, momentum));
+    //SGD<Posit> optimizer_posit(model_posit.parameters(), SGDOptions<Posit>(learning_rate, momentum));
+    SGDMixed<Posit, PositOptimizer> optimizer_posit(model_posit.parameters(), model_optimizer.parameters(), SGDOptions<PositOptimizer>(learning_rate, momentum));
 
 	// Test with untrained models
 	// Float

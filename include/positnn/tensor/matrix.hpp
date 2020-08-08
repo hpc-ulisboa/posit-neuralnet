@@ -71,6 +71,28 @@ void fused(	StdTensor<posit<nbits, es>>& a,
 	}
 }
 
+// Function that implements fused product (by constant) and add
+// c = a * alpha + b
+template <size_t nbits, size_t es, size_t capacity=nbits-1>
+void fused(	const StdTensor<posit<nbits, es>>& a,
+			const StdTensor<posit<nbits, es>>& b,
+			StdTensor<posit<nbits, es>>& c,
+			const posit<nbits, es> alpha) {
+	// TODO: throw error if size(a) != size(b)
+
+	quire<nbits, es, capacity> q;
+	if(alpha.isone()) {
+		c = a + b;
+	}
+	else {
+		value<1 + 2 * (nbits - es)> result;
+		for(size_t i=0, size=a.size(); i<size; i++) {
+			result = fma(a[i], alpha, b[i]);
+			convert(result, c[i]);
+		}
+	}
+}
+
 #ifdef USING_LL_THREADS
 
 // Function to be executed by each thread to sum along axis

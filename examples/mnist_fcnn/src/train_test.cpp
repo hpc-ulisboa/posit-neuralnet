@@ -8,6 +8,8 @@
 #include "FloatNet.hpp"
 #include "PositNet.hpp"
 
+using PositLoss = posit<8, 1>;
+
 // Custom functions
 #include "test_float.hpp"
 #include "test_posit.hpp"
@@ -62,8 +64,13 @@ void save_models(size_t const epoch, FloatNet& model_float, PositNet<T>& model_p
 }
 		
 int main() {
+	// Line buffering
+	setvbuf(stdout, NULL, _IOLBF, 0);
+
     std::cout << "MNIST Classification" << std::endl;
     std::cout << "Training and Testing on CPU." << std::endl;
+    std::cout << "Posit<" << Posit::nbits << ", " << Posit::es << ">" << std::endl;
+	std::cout << "PositLoss<" << PositLoss::nbits << ", " << PositLoss::es << ">" << std::endl;
 	
 	// Training and Testing settings
 	// The batch size for training.

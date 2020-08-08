@@ -31,7 +31,7 @@ Positf calculate_mean(StdTensor<Positi> const& x) {
 
 // Variance of tensor
 template <typename Positi, typename Positf=Positi> 
-Positf calculate_var(StdTensor<Positi> const& x) {
+Positf calculate_var(StdTensor<Positi> const& x, size_t ddof=0) {
 	// Calculate mean
 	Positf mean = calculate_mean<Positi, Positf>(x);
 
@@ -48,16 +48,16 @@ Positf calculate_var(StdTensor<Positi> const& x) {
 	}
 
 	convert(sum.to_value(), var);
-	var /= size;
+	var /= (size-ddof);
 
 	return var;
 }
 
 // Standard deviation of tensor
 template <typename Positi, typename Positf=Positi> 
-Positf calculate_std(StdTensor<Positi> const& x) {
+Positf calculate_std(StdTensor<Positi> const& x, size_t ddof=0) {
 	// Calculate variance
-	Positf std = calculate_var<Positi, Positf>(x);
+	Positf std = calculate_var<Positi, Positf>(x, ddof);
 	std = sqrt(std);
 
 	return std;

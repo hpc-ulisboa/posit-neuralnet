@@ -150,4 +150,76 @@ inline posit<nbits, es> tanh_approx(posit<nbits, es> p) {
 	return 2*sigmoid_approx(2*p)-1;
 }
 
+template<size_t nbits, size_t es>
+posit<nbits, es> round_pow2(const posit<nbits, es>& number) {
+	// If it's already a power of 2
+	if(number.ispowerof2())
+		return number;
+
+	constexpr size_t fbits = (es + 2 >= nbits ? 0 : nbits - 3 - es);             // maximum number of fraction bits: derived
+	bool s;
+	scale(number);
+	regime<nbits, es> r;
+	exponent<nbits, es> e;
+	fraction<fbits> f;
+	bitblock<nbits> raw = number.get();
+	extract_fields(raw, s, r, e, f);
+
+	bitblock<fbits> fraction = f.get();
+	size_t nrFracBits = f.nrBits();
+	bool greaterHalf = s ^ fraction[fbits-1];
+
+	// Round down
+	if(!greaterHalf) {
+		for(size_t i=0; i<nrFracBits; i++)
+			raw.reset(i);
+	}
+	// Round up
+	else {
+		for(size_t i=0; i<nrFracBits; i++)
+			raw.set(i);
+		increment_bitset(raw);
+	}
+	
+	posit<nbits, es> result;
+	result.set(raw);
+
+	//std::cout << "before:\t" << to_binary(number) << std::endl;
+	//std::cout << "after:\t" << to_binary(result) << std::endl;
+
+	return result;
+}
+
+// FAM (corrected): fused add-multiply: (a + b) * c
+template<size_t nbits, size_t es>
+value<2 * (nbits + 3 - es)> fam_corrected(const posit<nbits, es>& a, const posit<nbits, es>& b, const posit<nbits, es>& c) {
+	constexpr size_t fbits = nbits - 3 - es;
+	constexpr size_t abits = fbits + 4;       // size of the addend
+	//constexpr size_t fhbits = fbits + 1;      // size of fraction + hidden bit
+	constexpr size_t fhbits = abits + 1;      // size of fraction + hidden bit
+	constexpr size_t mbits = 2 * (fhbits + 1);      // size of the multiplier output
+
+	value<fbits> va, vb, ctmp;
+	value<abits+1> sum, vc;
+	value<mbits> product;
+
+	// special case
+	if (c.iszero()) return product;
+
+	// first the add
+	if (!a.iszero() || !b.iszero()) {
+		// transform the inputs into (sign,scale,fraction) triples
+		va.set(sign(a), scale(a), extract_fraction<nbits, es, fbits>(a), a.iszero(), a.isnar());;
+		vb.set(sign(b), scale(b), extract_fraction<nbits, es, fbits>(b), b.iszero(), b.isnar());;
+
+		module_add<fbits, abits>(va, vb, sum);    // multiply the two inputs
+		if (sum.iszero()) return product;  // product is still zero
+	}
+	// second, the multiply		
+	ctmp.set(sign(c), scale(c), extract_fraction<nbits, es, fbits>(c), c.iszero(), c.isnar());
+	vc.template right_extend<fbits, abits+1>(ctmp); // right-extend the c argument and assign to multiplier input
+	module_multiply(sum, vc, product);
+	return product;
+}
+
 #endif /* UTILS_HPP */

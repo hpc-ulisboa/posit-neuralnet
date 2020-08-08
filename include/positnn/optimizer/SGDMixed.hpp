@@ -1,55 +1,37 @@
-#ifndef SGD_HPP
-#define SGD_HPP
+#ifndef SGDMixed_HPP
+#define SGDMixed_HPP
 
 // General headers
 #include <universal/posit/posit>
 
 // Custom headers
 #include "../layer/Parameter.hpp"
+#include "../optimizer/SGD.hpp"
 #include "../tensor/matrix.hpp"
 #include "../tensor/StdTensor.hpp"
 
 // Namespaces
 using namespace sw::unum;
 
-template <typename T>
-struct SGDOptions {
-	SGDOptions() { }
-
-	template<typename optT=float>
-	SGDOptions(optT _learning_rate, optT _momentum=0, optT _dampening=0, optT _weight_decay=0, bool _nesterov=false) :
-		learning_rate(T(_learning_rate)),
-		momentum(T(_momentum)),
-		dampening(T(_dampening)),
-		weight_decay(T(_weight_decay)),
-		nesterov(_nesterov)
-	{ }
-	// TODO: protect agains invalid options
-
-	T learning_rate;
-	T momentum;
-	T dampening;
-	T weight_decay;
-	bool nesterov;
-	bool first = true;
-};
-
-template <typename T>
-class SGD {
+template <class T1, class T2>
+class SGDMixed {
 public:
-	SGD() { }
+	SGDMixed() { }
 
-	SGD(std::vector<Parameter<T>> parameters0, SGDOptions<T> options0) :
-		_parameters(parameters0),
+	SGDMixed(	std::vector<Parameter<T1>> parameters_model0,
+				std::vector<Parameter<T2>> parameters_optimizer0,
+				SGDOptions<T2> options0	) :
+		_parameters_model(parameters_model0),
+		_parameters_optimizer(parameters_optimizer0),
 		_options(options0)
 	{
 		if(_options.momentum!=0){
-			_velocities.reserve(_parameters.size());
+			_velocities.reserve(_parameters_optimizer.size());
 		}
 	}
 
 	void zero_grad() {
-		for(Parameter<T>& p : _parameters){
+		for(Parameter<T1>& p : _parameters_model){
 			p.gradient.clear();
 		}
 
@@ -57,11 +39,13 @@ public:
 	}
 
 	void step() {
-		StdTensor<T> dweight;
-		T const pOne(1);
+		copy_gradients(_parameters_model, _parameters_optimizer);
+
+		StdTensor<T2> dweight;
+		T2 const pOne(1);
 
 		size_t i=0;
-		for(Parameter<T>& p : _parameters){
+		for(Parameter<T2>& p : _parameters_optimizer){
 			//std::cout << "weight = " << p.weight << std::endl;
 			
 			dweight = p.gradient;
@@ -107,17 +91,20 @@ public:
 
 		_options.first = false;
 
+		copy_parameters(_parameters_optimizer, _parameters_model);
+
 		return;
 	}
 
-	SGDOptions<T> options() {
+	SGDOptions<T2> options() {
 		return _options;
 	}
 
 private:
-	std::vector<Parameter<T>> _parameters;
-	SGDOptions<T> _options;	
-	std::vector<StdTensor<T>> _velocities;
+	std::vector<Parameter<T1>> _parameters_model;
+	std::vector<Parameter<T2>> _parameters_optimizer;
+	SGDOptions<T2> _options;	
+	std::vector<StdTensor<T2>> _velocities;
 };
 
-#endif /* SGD_HPP */
+#endif /* SGDMixed_HPP */

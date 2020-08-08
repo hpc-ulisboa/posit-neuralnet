@@ -56,6 +56,46 @@ public:
 
 	~StdTensor() { }
 
+	// Default constructors and assignment operators
+	constexpr StdTensor(StdTensor<T> const&) = default;
+	constexpr StdTensor(StdTensor<T>&&) = default;
+
+	StdTensor<T>& operator=(StdTensor<T> const&) = default;
+	StdTensor<T>& operator=(StdTensor<T>&&) = default;
+
+	// Assignment operator when StdTensors have different types
+	template <class otherT>
+	//StdTensor<T>& operator=(StdTensor<otherT> const& rhs) {
+	StdTensor(StdTensor<otherT> const& rhs) {
+		m_dim = rhs.dim();
+		m_size = rhs.size();
+		m_shape = rhs.shape();
+		m_strides = rhs.strides();
+
+		const size_t old_size = m_data.size();
+		size_t copy_size;
+
+		if(old_size > m_size) {
+			m_data.resize(m_size);
+			m_data.shrink_to_fit();
+			copy_size = m_size;
+		}
+		else {
+			m_data.reserve(m_size);
+			copy_size = old_size;
+		}
+
+		for(size_t i=0; i<copy_size; i++){
+			//if(m_data[i] != rhs[i])
+				m_data[i] = T(rhs[i]);
+		}
+
+		for(size_t i=copy_size; i<m_size; i++)
+			m_data.push_back(T(rhs[i]));
+
+		//return *this;
+	}
+
 	// Get element from tensor
 	//typename std::vector<T>::reference const operator[](size_t i) const {
 	const T& operator[](size_t i) const {
@@ -189,37 +229,6 @@ public:
 	/*
 	void push_back(const T& elem) {
 		m_data.push_back(elem);
-	}
-
-	// Assignment operator
-	StdTensor<T>& operator= (const StdTensor<T>& rhs) {
-		m_dim = rhs.dim();
-		m_size = rhs.size();
-		m_shape = rhs.shape();
-		m_strides = rhs.strides();
-
-		const size_t old_size = m_data.size();
-		size_t copy_size;
-
-		if(old_size > m_size) {
-			m_data.resize(m_size);
-			m_data.shrink_to_fit();
-			copy_size = m_size;
-		}
-		else {
-			m_data.reserve(m_size);
-			copy_size = old_size;
-		}
-
-		for(size_t i=0; i<copy_size; i++){
-			//if(m_data[i] != rhs[i])
-				m_data[i] = rhs[i];
-		}
-
-		for(size_t i=copy_size; i<m_size; i++)
-			m_data.push_back(rhs[i]);
-
-		return *this;
 	}
 	*/
 
@@ -408,14 +417,14 @@ public:
 		}
 
 		return result;
-	}
+	}	
 
 private:
 	size_t m_dim;
 	size_t m_size;
 	std::vector<size_t> m_shape;
 	std::vector<size_t> m_strides;
-	//std::vector<T> m_data;
+	std::vector<T> m_data;
 
 	void compute_strides() {
 		m_strides.resize(m_dim);
@@ -425,8 +434,8 @@ private:
 				m_strides.rbegin() + 1,
 				std::multiplies<size_t>());
 	}
-public:
-	std::vector<T> m_data;
+//public:
+	//std::vector<T> m_data;
 };
 
 // Binary arithmetic operators

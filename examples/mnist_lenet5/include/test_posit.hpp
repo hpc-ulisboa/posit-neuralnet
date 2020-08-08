@@ -39,16 +39,16 @@ void test_posit(	PositNet<Posit>& model,
 		auto output = model.forward(data);
 		
 		// Calculate loss
-		test_loss += cross_entropy_loss<Posit, USInt>(	output,
-														target,
-														Reduction::Sum	).template item<float>();
+		test_loss += cross_entropy_loss<PositLoss, Posit, USInt>(	output,
+																	target,
+																	Reduction::Sum	).template item<float>();
 
 		// Get prediction from output
 		auto pred = output.template argmax<USInt>(1);
 #else
 		// Forward pass and prediction
 		std::vector<float> losses;
-		auto pred = forward<cross_entropy_loss<Posit, USInt>>(model, data, target, losses);
+		auto pred = forward<cross_entropy_loss<PositLoss, Posit, USInt>>(model, data, target, losses);
 
 		// Calculate loss
 		test_loss += std::accumulate(losses.begin(), losses.end(), 0.0);

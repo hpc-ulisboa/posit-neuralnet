@@ -15,15 +15,10 @@ public:
 	Loss() {}
 	virtual ~Loss() {}
 
-	template <typename NetT>
-	void backward(NetT& model) {
-		StdTensor<T> dloss = derivative();
-
-		/*
-		// SCALING
-		if(LOSS_SCALE!=1)
-			dloss *= LOSS_SCALE;
-		*/
+	template <template<class> class PositNet, class Posit>
+	void backward(PositNet<Posit>& model) {
+		//StdTensor<T> dloss = derivative();
+		StdTensor<Posit> dloss = derivative();
 
 		model.backward(dloss);
 

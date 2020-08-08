@@ -68,13 +68,13 @@ public:
 		error = conv3.backward(error);
 		error = bs.backward(2, error, conv3.parameters());
 
-		error = max_pool2.backward(error);
 		error = relu2.backward(error);
+		error = max_pool2.backward(error);
 		error = conv2.backward(error);
 		error = bs.backward(1, error, conv2.parameters());
 
-		error = max_pool1.backward(error);
 		error = relu1.backward(error);
+		error = max_pool1.backward(error);
 		error = conv1.backward(error);
 		error = bs.backward(0, error, conv1.parameters());
 
