@@ -3,11 +3,11 @@
 Framework in C++ for Deep Learning (training and testing) using <a href="https://posithub.org/" target="_blank">Posits</a>.
 The posits are emulated with <a href="https://github.com/stillwater-sc/universal" target="_blank">stillwater-sc/universal</a> library and the deep learning is based in <a href="https://pytorch.org/" target="_blank">PyTorch</a>.
 
-This is being developed for thesis to obtain a Master of Science Degree in Aerospace Engineering.
+This is being developed for a thesis to obtain a Master of Science Degree in Aerospace Engineering.
 
 ---
 
-## Table of Contents (Optional)
+## Table of Contents
 
 - [Examples](#examples)
 - [Installation](#installation)
@@ -23,7 +23,10 @@ This is being developed for thesis to obtain a Master of Science Degree in Aeros
 
 ## Examples
 
-Folder "examples" includes: example of CMakeLists.txt for a project, an example of a FC Neural Network applied to the MNIST dataset, and LeNet-5 applied to the MNIST dataset. 
+Folder "examples" includes: example of CMakeLists.txt for a project, an example of a FC Neural Network applied to the MNIST dataset, and LeNet-5 applied to the MNIST dataset. To know how to run an example, check the section [Tests](#tests).
+
+- Example of training LeNet-5 on MNIST using posits
+![training lenet-5 on mnist using posits](examples/mnist_lenet5/plots/train_test_scale_loss_8_2.png?raw=true "Example of training LeNet-5 on MNIST using posits")
 
 ---
 
