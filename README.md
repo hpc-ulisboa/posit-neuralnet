@@ -25,8 +25,8 @@ This is being developed for a thesis to obtain a Master of Science Degree in Aer
 
 Folder "examples" includes: example of CMakeLists.txt for a project, an example of a FC Neural Network applied to the MNIST dataset, and LeNet-5 applied to the MNIST dataset. To know how to run an example, check the section [Tests](#tests).
 
-- Example of training LeNet-5 on MNIST using posits
-![training lenet-5 on mnist using posits](examples/mnist_lenet5/plots/train_test_scale_loss_8_2.png?raw=true "Example of training LeNet-5 on MNIST using posits")
+- Example of training LeNet-5 on Fashion MNIST using posits
+![training lenet-5 on mnist using posits](examples/FashionMNIST_LeNet5.png?raw=true "Example of training LeNet-5 on MNIST using posits")
 
 ---
 
@@ -66,6 +66,7 @@ $ git clone https://github.com/hpc-ulisboa/posit-neuralnet.git
 - Loss functions: Cross-Entropy, Mean Squared Error
 - Optimizer: SGD
 - Tensor class: StdTensor
+- Multithreading
 
 ## Usage
 - Copy the CMakeLists.txt inside examples and adapt to your setup, namely, the directories of universal and PositNN, and number of threads
