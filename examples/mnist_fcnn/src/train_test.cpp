@@ -21,7 +21,7 @@ using namespace sw::unum;
 
 // Posit configuration
 #define NBITS	8
-#define ES 		1
+#define ES	1
 using Posit = posit<NBITS, ES>;
 using PositSaveFile = Posit;
 
