@@ -1,6 +1,6 @@
 # PositNN
 
-Framework in C++ for Deep Learning (training and testing) using <a href="https://posithub.org/" target="_blank">Posits</a>.
+Library in C++ for Deep Learning (training and testing) using <a href="https://posithub.org/" target="_blank">Posits</a>.
 The posits are emulated with <a href="https://github.com/stillwater-sc/universal" target="_blank">stillwater-sc/universal</a> library and the deep learning is based in <a href="https://pytorch.org/" target="_blank">PyTorch</a>.
 
 This is being developed for a thesis to obtain a Master of Science Degree in Aerospace Engineering.
