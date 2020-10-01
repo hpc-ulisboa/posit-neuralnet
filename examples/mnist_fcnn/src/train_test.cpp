@@ -47,8 +47,8 @@ struct Type{
 #define SAVE_UNTRAINED false
 #define SAVE_EPOCH false
 
-template <typename T>
-void save_models(size_t const epoch, FloatNet& model_float, PositNet<T>& model_posit) {
+template<typename T, template<typename> class ModelPosit, class ModelFloat>
+void save_models(size_t const epoch, ModelFloat& model_float, ModelPosit<T>& model_posit) {
 	char net_epoch_filename_float[128];
 	char net_epoch_filename_posit[128];
 	// Float
@@ -59,7 +59,7 @@ void save_models(size_t const epoch, FloatNet& model_float, PositNet<T>& model_p
 	// Posit
 	snprintf(net_epoch_filename_posit, sizeof(net_epoch_filename_posit),
 			NET_EPOCH_FILENAME_POSIT, epoch);
-	save<T>(model_posit, net_epoch_filename_posit);
+	save<typename T::SaveFile>(model_posit, net_epoch_filename_posit);
 }
 		
 int main() {
@@ -101,7 +101,7 @@ int main() {
 	if(LOAD){
 		torch::load(model_float, NET_LOAD_FILENAME_FLOAT);
 		if(!COPY)
-			load<PositLoadFile>(model_posit, NET_LOAD_FILENAME_POSIT);
+			load<Type::LoadFile>(model_posit, NET_LOAD_FILENAME_POSIT);
 	}
 
 	// Initialize posit net with the same random parameters as float net

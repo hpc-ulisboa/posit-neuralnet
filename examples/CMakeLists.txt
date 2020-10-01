@@ -58,7 +58,7 @@ include_directories("${HEADER_FOLDER}")
 ###########################################################################
 
 # Include universal (posits) ##############################################
-include_directories("${CMAKE_CURRENT_LIST_DIR}/../universal/include")
+include_directories("${CMAKE_CURRENT_LIST_DIR}/../../../universal/include")
 ###########################################################################
 
 # Include PositNN (PyTorch for posits) ####################################
