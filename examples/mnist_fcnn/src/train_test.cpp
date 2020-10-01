@@ -3,12 +3,11 @@
 #include <torch/torch.h>
 #include <universal/posit/posit>
 #include <positnn/positnn>
+#include <stdio.h>
 
 // Custom headers
 #include "FloatNet.hpp"
 #include "PositNet.hpp"
-
-using PositLoss = posit<8, 1>;
 
 // Custom functions
 #include "test_float.hpp"
@@ -20,25 +19,25 @@ using PositLoss = posit<8, 1>;
 using namespace sw::unum;
 
 // Posit configuration
-#define NBITS	8
-#define ES	1
-using Posit = posit<NBITS, ES>;
-using PositSaveFile = Posit;
+struct Type{
+	typedef posit<16, 1> Optimizer;
+	typedef posit<8, 2> Forward;
+	typedef posit<8, 2> Backward;
+	typedef posit<8, 2> Gradient;
+	typedef posit<16, 1> Loss;
+	typedef posit<16, 1> SaveFile;
+	typedef posit<16, 1> LoadFile;
+};
 
 // Dataset path
 #define DATASET_PATH					"../dataset"
 
 // Load
-using PositLoadFile = Posit;
 #define NET_LOAD_FILENAME_FLOAT			"../net/posit_8_1/model_epoch_0_float.pt"
 #define NET_LOAD_FILENAME_POSIT			"../net/posit_8_2/model_epoch_0_posit.dat"
 
-// String helper
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
 // Save
-#define NET_SAVE_PATH					"../net/posit_" STR(NBITS) "_" STR(ES) "/"
+#define NET_SAVE_PATH					"../net/example/"
 #define NET_EPOCH_FILENAME_FLOAT		NET_SAVE_PATH "model_epoch_%zu_float.pt"
 #define NET_EPOCH_FILENAME_POSIT		NET_SAVE_PATH "model_epoch_%zu_posit.dat"
 
@@ -67,10 +66,13 @@ int main() {
 	// Line buffering
 	setvbuf(stdout, NULL, _IOLBF, 0);
 
-    std::cout << "MNIST Classification" << std::endl;
+	std::cout << "MNIST Classification" << std::endl;
     std::cout << "Training and Testing on CPU." << std::endl;
-    std::cout << "Posit<" << Posit::nbits << ", " << Posit::es << ">" << std::endl;
-	std::cout << "PositLoss<" << PositLoss::nbits << ", " << PositLoss::es << ">" << std::endl;
+    std::cout << "PositOptimizer<" << Type::Optimizer::nbits << ", " << Type::Optimizer::es << ">" << std::endl;
+    std::cout << "PositForward<" << Type::Forward::nbits << ", " << Type::Forward::es << ">" << std::endl;
+    std::cout << "PositBackward<" << Type::Backward::nbits << ", " << Type::Backward::es << ">" << std::endl;
+    std::cout << "PositGradient<" << Type::Gradient::nbits << ", " << Type::Gradient::es << ">" << std::endl;
+    std::cout << "PositLoss<" << Type::Loss::nbits << ", " << Type::Loss::es << ">" << std::endl;
 	
 	// Training and Testing settings
 	// The batch size for training.
@@ -79,18 +81,21 @@ int main() {
 	// The batch size for testing.
 	size_t const kTestBatchSize = 1024;
 	// The number of epochs to train.
-	size_t const num_epochs = 1;
+	size_t const num_epochs = 10;
 
 	// After how many batches to log a new update with the loss value.
-	size_t const kLogInterval = 10;
+	size_t const kLogInterval = 32;
 
 	// Optimizer parameters
 	float const learning_rate = 0.1;
-	float const momentum = 0.9;
+	float const momentum = 0.5;
+	 
+	// Start training posit at epoch
+	size_t const start_epoch = 1;
 
 	// Float and Posit networks
     FloatNet model_float;
-	PositNet<Posit> model_posit;
+	PositNet<Type> model_posit;
 
 	// Load net parameters from file
 	if(LOAD){
@@ -110,13 +115,12 @@ int main() {
 	// Load MNIST training dataset
 	auto train_dataset = torch::data::datasets::MNIST(DATASET_PATH)
 							.map(torch::data::transforms::Normalize<>(0.1307, 0.3081))
-							/* .map(torch::data::transforms::Normalize<>(0.1307, 0.3081)) */
                     		.map(torch::data::transforms::Stack<>());
 	const size_t train_dataset_size = train_dataset.size().value();
 
 	// Create data loader from training dataset
-	//auto train_loader = torch::data::make_data_loader(
-	auto train_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(
+	auto train_loader = torch::data::make_data_loader(
+	//auto train_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(
 							std::move(train_dataset),
 							torch::data::DataLoaderOptions().batch_size(kTrainBatchSize));
 	
@@ -128,14 +132,14 @@ int main() {
 	const size_t test_dataset_size = test_dataset.size().value();
 
 	// Create data loader from testing dataset
-	//auto test_loader = torch::data::make_data_loader(
-	auto test_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(
+	auto test_loader = torch::data::make_data_loader(
+	//auto test_loader = torch::data::make_data_loader<torch::data::samplers::SequentialSampler>(
 							std::move(test_dataset),
 							torch::data::DataLoaderOptions().batch_size(kTestBatchSize));
 
 	// Optimizer
     torch::optim::SGD optimizer_float(model_float->parameters(), torch::optim::SGDOptions(learning_rate).momentum(momentum));
-    SGD<Posit> optimizer_posit(model_posit.parameters(), SGDOptions<Posit>(learning_rate, momentum));
+    SGD<Type::Optimizer> optimizer_posit(model_posit.parameters(), SGDOptions<Type::Optimizer>(learning_rate, momentum));
 
 	// Test with untrained models
 	// Float
@@ -156,7 +160,12 @@ int main() {
 		
 		// Posit
 		std::cout << std::endl << "Posit" << std::endl;
-		train_posit(epoch, num_epochs, model_posit, *train_loader, optimizer_posit, kLogInterval, train_dataset_size);
+		if(epoch<start_epoch) {
+			copy_parameters(model_float->parameters(), model_posit.parameters());
+		}
+		else {
+			train_posit(epoch, num_epochs, model_posit, *train_loader, optimizer_posit, kLogInterval, train_dataset_size);
+		}
 		test_posit(model_posit, *test_loader, test_dataset_size);
 
 		// Save models after each epoch

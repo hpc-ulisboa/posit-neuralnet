@@ -1,5 +1,5 @@
-#ifndef SGDMixed_HPP
-#define SGDMixed_HPP
+#ifndef SGDMIXED_HPP
+#define SGDMIXED_HPP
 
 // General headers
 #include <universal/posit/posit>
@@ -107,4 +107,4 @@ private:
 	std::vector<StdTensor<T2>> _velocities;
 };
 
-#endif /* SGDMixed_HPP */
+#endif /* SGDMIXED_HPP */

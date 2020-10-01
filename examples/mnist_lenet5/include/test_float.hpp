@@ -5,12 +5,8 @@
 #include <iostream>
 #include <torch/torch.h>
 
-// Custom headers
-//#include "FloatNet.hpp"
-
-//template <typename DataLoader>
-template <typename FloatNet, typename DataLoader>
-void test_float(	FloatNet& model,
+template <class Model, typename DataLoader>
+void test_float(	Model& model,
 					DataLoader& data_loader,
 					size_t dataset_size	){
 	
@@ -25,9 +21,6 @@ void test_float(	FloatNet& model,
 		auto data = batch.data;
 		auto target = batch.target;
 		
-		// Resize data
-		//data = at::upsample_bilinear2d(data, {32, 32}, true);
-
 		// Convert data and target to float32 and long
 		data = data.to(torch::kF32);
 		target = target.to(torch::kLong);
@@ -49,8 +42,8 @@ void test_float(	FloatNet& model,
 	test_loss /= dataset_size;
 
 	// Print results
-	std::printf("Test set: Loss: %.4f | Accuracy: %.4f\n",
-	  			test_loss,
+	std::printf("Test set: Loss: %.4f | Accuracy: [%5ld/%5ld] %.4f\n",
+	  			test_loss, correct, dataset_size,
 	  			static_cast<float>(correct) / dataset_size);
 }
 

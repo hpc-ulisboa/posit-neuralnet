@@ -7,17 +7,14 @@
 // Custom headers
 #include "init.hpp"
 #include "Parameter.hpp"
+#include "../tensor/MixedTensor.hpp"
 #include "../tensor/StdTensor.hpp"
 
-template <typename Posit>
+template <typename Posit>	// Data format to be used in optimizer
 class Layer {
 public:
 	Layer()	{}
 	virtual ~Layer() {}
-
-	//virtual StdTensor<Posit> forward(StdTensor<Posit> x) {}
-
-	//virtual StdTensor<Posit> backward(StdTensor<Posit> deltaN) {}
 
 	void zero_grad() {
 		for(Parameter<Posit>& p : _parameters){
@@ -30,8 +27,7 @@ public:
 	}
 
 	void register_parameter(StdTensor<Posit>& _weight, StdTensor<Posit>& _gradient) {
-		Parameter<Posit> p(_weight, _gradient);
-		_parameters.push_back(p);
+		_parameters.push_back( Parameter<Posit>(_weight, _gradient) );
 	}
 
 	void register_parameter(Parameter<Posit>& p) {
@@ -43,6 +39,17 @@ public:
 			_parameters.push_back(p);
 		}
 	}
+
+	template <typename ForwardT, typename BackwardT=ForwardT>
+	void register_parameter(MixedTensor<Posit, ForwardT, BackwardT>& _weight, StdTensor<Posit>& _gradient) {
+		_parameters.push_back( Parameter<Posit>(_weight, _gradient) );
+	}
+	/*
+	template <typename MixedTensor>
+	void register_parameter(MixedTensor& _weight, StdTensor<Posit>& _gradient) {
+		_parameters.push_back( Parameter<Posit>(_weight, _gradient) );
+	}
+	*/
 
 	void register_module(Layer<Posit>& layer) {
 		register_parameter(layer.parameters());

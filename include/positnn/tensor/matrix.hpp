@@ -16,6 +16,7 @@
 
 // Custom headers
 #include "StdTensor.hpp"
+#include "../utils/Quire.hpp"
 
 // Namespaces
 using namespace sw::unum;
@@ -52,7 +53,7 @@ void fused(	StdTensor<posit<nbits, es>>& a,
 			const posit<nbits, es> beta	){
 	// TODO: throw error if size(a) != size(b)
 
-	quire<nbits, es, capacity> q;
+	Quire<nbits, es> q;
 	bool const alpha1 = alpha.isone();
 	bool const beta1 = beta.isone();
 
@@ -60,12 +61,12 @@ void fused(	StdTensor<posit<nbits, es>>& a,
 		if(alpha1)
 			q = a[i];
 		else
-			q = quire_mul(a[i], alpha);
+			q = Quire_mul(a[i], alpha);
 
 		if(beta1)
 			q += b[i];
 		else
-			q += quire_mul(b[i], beta);
+			q += Quire_mul(b[i], beta);
 
 		convert(q.to_value(), a[i]);
 	}
@@ -80,7 +81,7 @@ void fused(	const StdTensor<posit<nbits, es>>& a,
 			const posit<nbits, es> alpha) {
 	// TODO: throw error if size(a) != size(b)
 
-	quire<nbits, es, capacity> q;
+	Quire<nbits, es> q;
 	if(alpha.isone()) {
 		c = a + b;
 	}
@@ -110,7 +111,7 @@ void dot_thread (	const StdTensor<posit<nbits, es>>& a,
 	else					// to protect when i_begin==i_end, which occurs when nblocks=0
 		i_end += loop_stride;
 
-	quire<nbits, es, capacity> q;
+	Quire<nbits, es> q;
 	size_t n = c_begin;
 
 	for(size_t i=i_begin; i<i_end; i+=loop_stride) {	// loop blocks
@@ -118,10 +119,10 @@ void dot_thread (	const StdTensor<posit<nbits, es>>& a,
 		const size_t j_end = (i==i_end-loop_stride) ? j_last : stride;
 
 		for(size_t j=j_begin; j<j_end; j++){	// loop beginning elements of block
-			q = 0;
+			q.clear();
 
 			for(size_t k=i+j, l=0; l<axis_size; k+=stride, l++){	// loop elements to sum
-				q += sw::unum::quire_mul(a[k], b[k]);
+				q += Quire_mul(a[k], b[k]);
 			}
 
 			convert(q.to_value(), c[n++]);
@@ -223,7 +224,7 @@ StdTensor<posit<nbits, es>> dot(const StdTensor<posit<nbits, es>>& a,
 
 	StdTensor<posit<nbits, es>> c(new_shape);
 
-	quire<nbits, es, capacity> q;
+	Quire<nbits, es> q;
 	
 	size_t i, j, k, l, n=0;
 	size_t const size = a.size();
@@ -234,7 +235,7 @@ StdTensor<posit<nbits, es>> dot(const StdTensor<posit<nbits, es>>& a,
 	for(i=0; i<size; i+=loop_stride) {	// loop blocks
 		for(j=0; j<stride; j++){	// loop beginning elements of block
 			for(k=i+j, l=0, q=0; l<axis_size; k+=stride, l++){	// loop elements to sum
-				q += quire_mul(a[k], b[k]);
+				q += Quire_mul(a[k], b[k]);
 			}
 			convert(q.to_value(), c[n++]);
 		}
@@ -261,7 +262,7 @@ void matmul_row_thread (const StdTensor<posit<nbits, es>>& a,
 	else					// to protect when a_begin==a_end, which occurs when nrows=0
 		a_end += stride;
 
-	quire<nbits, es, capacity> q;
+	Quire<nbits, es> q;
 	size_t n = c_begin;
 
 	//std::cout << "a_begin=" << a_begin << " a_end=" << a_end << " b_begin=" << b_begin << " b_end=" << b_end << " c_begin=" << c_begin << std::endl;
@@ -271,11 +272,11 @@ void matmul_row_thread (const StdTensor<posit<nbits, es>>& a,
 		const size_t j_end = (i==a_end-stride) ? b_end : b_size;
 
 		for(size_t j=j_begin; j<j_end; j+=stride){
-			q = 0;
+			q.clear();
 
 			for(size_t k=0; k<stride; k++){
 				// TODO: try changing indices to relative instead of absolute
-				q += sw::unum::quire_mul(a[i+k], b[j+k]);
+				q += Quire_mul(a[i+k], b[j+k]);
 			}
 
 			convert(q.to_value(), c[n++]);
@@ -351,7 +352,7 @@ StdTensor<posit<nbits, es>> matmul_row(const StdTensor<posit<nbits, es>>& a, con
 	// TODO: THROW ERROR IF MATRIX DIMENSIONS ARE INVALID
 	StdTensor<posit<nbits, es>> c({a.shape()[0], b.shape()[0]});
 
-	quire<nbits, es, capacity> q;
+	Quire<nbits, es> q;
 
 	const size_t a_size = a.size();
 	const size_t b_size = b.size();
@@ -363,7 +364,7 @@ StdTensor<posit<nbits, es>> matmul_row(const StdTensor<posit<nbits, es>>& a, con
 		for(j=0; j<b_size; j+=stride){
 			for(q=0, k=0; k<stride; k++){
 				// TODO: try changing indices to relative instead of absolute
-				q += sw::unum::quire_mul(a[i+k], b[j+k]);
+				q += Quire_mul(a[i+k], b[j+k]);
 			}
 			convert(q.to_value(), c[n++]);
 		}
@@ -392,7 +393,7 @@ void matmul_row_add_thread (const StdTensor<posit<nbits, es>>& a,
 	else					// to protect when a_begin==a_end, which occurs when nrows=0
 		a_end += stride;
 
-	quire<nbits, es, capacity> q;
+	Quire<nbits, es> q;
 	size_t l = c_begin;
 	size_t n = d_begin;
 
@@ -404,11 +405,11 @@ void matmul_row_add_thread (const StdTensor<posit<nbits, es>>& a,
 			l = 0;
 
 		for(size_t j=j_begin; j<j_end; j+=stride){
-			q = 0;
+			q.clear();
 
 			for(size_t k=0; k<stride; k++){
 				// TODO: try changing indices to relative instead of absolute
-				q += sw::unum::quire_mul(a[i+k], b[j+k]);
+				q += Quire_mul(a[i+k], b[j+k]);
 			}
 
 			//std::cerr << "c_index=" << l << "/" << c.size() << " d_index=" << n << "/" << c.size() << std::endl;
@@ -497,7 +498,7 @@ StdTensor<posit<nbits, es>> matmul_row_add(const StdTensor<posit<nbits, es>>& a,
 	// TODO: THROW ERROR IF MATRIX DIMENSIONS ARE INVALID
 	StdTensor<posit<nbits, es>> d({a.shape()[0], b.shape()[0]});
 
-	quire<nbits, es, capacity> q;	// TODO: COMPUTE BEST CAPACITY
+	Quire<nbits, es> q;	// TODO: COMPUTE BEST CAPACITY
 
 	const size_t a_size = a.size();
 	const size_t b_size = b.size();
@@ -510,7 +511,7 @@ StdTensor<posit<nbits, es>> matmul_row_add(const StdTensor<posit<nbits, es>>& a,
 		for(j=0; j<b_size; j+=stride){
 			for(q=0, k=0; k<stride; k++){
 				// TODO: try changing indices to relative instead of absolute
-				q += sw::unum::quire_mul(a[i+k], b[j+k]);
+				q += Quire_mul(a[i+k], b[j+k]);
 			}
 			q += c[n%c_size];
 			convert(q.to_value(), d[n++]);
@@ -607,7 +608,7 @@ StdTensor<T> matmul_row(const StdTensor<T>& a, const StdTensor<T>& b, const size
 	StdTensor<T> c({a.shape()[0], b.shape()[0]});
 	const size_t size = c.size();
 
-	using Quire = quire<nbits, es, capacity>;
+	using Quire = Quire<nbits, es>;
 	std::vector<Quire> q(size);	// TODO: COMPUTE BEST CAPACITY
 
 	const size_t a_lines = a.shape()[0];
@@ -623,7 +624,7 @@ StdTensor<T> matmul_row(const StdTensor<T>& a, const StdTensor<T>& b, const size
 				for(size_t i=bi; i<imax; i++) {
 					for(size_t j=bj; j<jmax; j++) {
 						for(size_t k=bk; k<kmax; k++) {
-							q[i*b_lines+j] += sw::unum::quire_mul(a[line_size*i+k], b[line_size*j+k]);
+							q[i*b_lines+j] += Quire_mul(a[line_size*i+k], b[line_size*j+k]);
 						}
 					}
 				}
@@ -647,7 +648,7 @@ StdTensor<T> matmul(const StdTensor<T>& a, const StdTensor<T>& b){
 	// TODO: THROW ERROR IF MATRIX DIMENSIONS ARE INVALID
 	StdTensor<T> c({a.shape()[0], b.shape()[1]});
 
-	quire<nbits, es, capacity> q;	// TODO: COMPUTE BEST CAPACITY
+	Quire<nbits, es> q;	// TODO: COMPUTE BEST CAPACITY
 
 	size_t ix, iy;
 	size_t i, j, k=0;
@@ -659,7 +660,7 @@ StdTensor<T> matmul(const StdTensor<T>& a, const StdTensor<T>& b){
 	for(i=0; i<a_size; i+=a_stride){
 		for(j=0; j<b_stride; j++){
 			for(q=0, ix=i, iy=j; ix<i+a_stride; ix++, iy+=b_stride){
-				q += sw::unum::quire_mul(a[ix], b[iy]);
+				q += Quire_mul(a[ix], b[iy]);
 			}
 			convert(q.to_value(), c[k++]);
 		}
@@ -682,7 +683,7 @@ StdTensor<T> matmul (const StdTensor<T>& a, const StdTensor<T>& b, const size_t 
 	StdTensor<T> c({a_rows, b_cols});
 	const size_t nelem = c.size();
 
-	using Quire = quire<nbits, es, capacity>;
+	using Quire = Quire<nbits, es>;
 	std::vector<Quire> q(nelem);	// TODO: COMPUTE BEST CAPACITY
 
 	for(size_t bj=0; bj<b_cols; bj+=block){
@@ -694,7 +695,7 @@ StdTensor<T> matmul (const StdTensor<T>& a, const StdTensor<T>& b, const size_t 
 				for(size_t j=bj; j<jmax; j++) {
 					for(size_t i=bi; i<imax; i++) {
 						for(size_t k=bk; k<kmax; k++) {
-							q[i*b_cols+j] += sw::unum::quire_mul(a[i*size+k], b[k*b_cols+j]);
+							q[i*b_cols+j] += Quire_mul(a[i*size+k], b[k*b_cols+j]);
 						}
 					}
 				}
@@ -725,7 +726,7 @@ StdTensor<T> matmul_col(const StdTensor<T>& a, const StdTensor<T>& b){
 	// TODO: THROW ERROR IF MATRIX DIMENSIONS ARE INVALID
 	StdTensor<T> c({a.shape()[1], b.shape()[1]});
 
-	quire<nbits, es, capacity> q;	// TODO: COMPUTE BEST CAPACITY
+	Quire<nbits, es> q;	// TODO: COMPUTE BEST CAPACITY
 	T sum;
 
 	size_t i, j, k, n=0;
@@ -734,12 +735,12 @@ StdTensor<T> matmul_col(const StdTensor<T>& a, const StdTensor<T>& b){
 	const size_t b_stride = b.strides()[0];
 	const size_t size = a.shape()[0];
 
-	// TODO: detect if posit. check if it throws error in quire_mul with floats
+	// TODO: detect if posit. check if it throws error in Quire_mul with floats
 	
 	for(i=0; i<a_stride; i++){
 		for(j=0; j<b_stride; j++){
 			for(q=0, k=0; k<size; k++){
-				q += sw::unum::quire_mul(a[i+k*a_stride], b[j+k*b_stride]);
+				q += Quire_mul(a[i+k*a_stride], b[j+k*b_stride]);
 				// TODO: PROBLEM OF SLOW IS HERE ^
 			}
 			convert(q.to_value(), c[n++]);

@@ -7,7 +7,6 @@
 #include <random>
 
 // Custom headers
-#include "../layer/Parameter.hpp"
 #include "../tensor/StdTensor.hpp"
 
 template <typename T, typename randT=float>

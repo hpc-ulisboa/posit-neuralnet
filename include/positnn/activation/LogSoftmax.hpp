@@ -6,6 +6,7 @@
 
 // Custom headers
 #include "../tensor/StdTensor.hpp"
+#include "../utils/Quire.hpp"
 
 // Namespaces
 using namespace sw::unum;
@@ -25,17 +26,20 @@ public:
 
 		StdTensor<Posit> output = StdTensor<Posit>(x);
 		Posit max, delta;
-		quire<Posit::nbits, Posit::es, Posit::nbits-1> q;
+
+		Quire<Posit::nbits, Posit::es> q;
+
 		typename StdTensor<Posit>::iterator const x_begin = x.begin();
 
 		for(size_t i=0, j=0; i<batch_size; i++, j+=sample_size) {
 			max = *std::max_element(x_begin+j, x_begin+j+sample_size);
 
-			q = 0;
+			q.clear();
 			for(size_t k=0; k<sample_size; k++) {
 				exp_x_max[j+k] = exp(x[j+k] - max);
 				q += exp_x_max[j+k];
 			}
+
 			convert(q.to_value(), sum_exp[i]);
 
 			delta = max + log(sum_exp[i]);

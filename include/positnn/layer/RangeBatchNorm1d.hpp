@@ -9,6 +9,7 @@
 #include "../tensor/matrix.hpp"
 #include "../tensor/sum.hpp"
 #include "../tensor/StdTensor.hpp"
+#include "../utils/Quire.hpp"
 
 // Namespaces
 using namespace sw::unum;
@@ -97,18 +98,18 @@ public:
 		StdTensor<Posit> temp2 = dot(delta, x_norm);
 		temp2 /= C_1;
 
-		quire<Posit::nbits, Posit::es, Posit::nbits-1> q;
+		Quire<Posit::nbits, Posit::es> q;
 		for(size_t i=0, j=0; i<size; i++, j++) {
 			if(j>=num_features)
 				j=0;
 
 			q = delta[i];
-			q -= sw::unum::quire_mul(temp1[j], 1/Posit(batch_size));
+			q -= Quire_mul(temp1[j], 1/Posit(batch_size));
 			if (max_min_idx[i] == 1) {
-				q -= sw::unum::quire_mul(temp2[j], 1/Posit(max_size[j]));
+				q -= Quire_mul(temp2[j], 1/Posit(max_size[j]));
 			}
 			else if (max_min_idx[i] == -1) {
-				q += sw::unum::quire_mul(temp2[j], 1/Posit(min_size[j]));
+				q += Quire_mul(temp2[j], 1/Posit(min_size[j]));
 			}
 			convert(q.to_value(), delta_1[i]);
 		}
@@ -145,7 +146,7 @@ public:
 
 		StdTensor<Posit> mean(num_features);
 
-		quire<nbits, es, Posit::nbits-1> sum;
+		Quire<nbits, es> sum;
 
 		// Calculate mean
 		for(size_t i=0; i<num_features; i++){

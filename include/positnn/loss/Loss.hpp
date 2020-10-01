@@ -9,24 +9,23 @@ using namespace sw::unum;
 
 enum class Reduction {Mean, Sum};
 
-template <typename T, typename lossT=float>
+template <typename BackwardT, typename lossT=float>
 class Loss{
 public:
 	Loss() {}
 	virtual ~Loss() {}
 
-	template <template<class> class PositNet, class Posit>
-	void backward(PositNet<Posit>& model) {
-		//StdTensor<T> dloss = derivative();
-		StdTensor<Posit> dloss = derivative();
+	template <typename Model>
+	void backward(Model& model) {
+		StdTensor<BackwardT> dloss = derivative();
 
 		model.backward(dloss);
 
 		return;
 	}
 
-	virtual StdTensor<T> derivative(){
-		return StdTensor<T>();
+	virtual StdTensor<BackwardT> derivative(){
+		return StdTensor<BackwardT>();
 	}
 
 	template <typename CustomType>

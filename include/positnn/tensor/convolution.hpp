@@ -17,6 +17,7 @@
 // Custom headers
 #include "StdTensor.hpp"
 #include "Window.hpp"
+#include "../utils/Quire.hpp"
 
 // Namespaces
 using namespace sw::unum;
@@ -25,7 +26,7 @@ using namespace sw::unum;
 template <size_t nbits, size_t es, size_t capacity=nbits-1>
 void do_convolution(StdTensor<posit<nbits, es>> const& input,
 					StdTensor<posit<nbits, es>> const& kernel,
-					quire<nbits, es, capacity>& output, Window const& w,
+					Quire<nbits, es>& output, Window const& w,
 					size_t const input_idx, size_t const kernel_idx, size_t const idx){
 
 	// Begin and end element to operate (multiply)
@@ -41,7 +42,7 @@ void do_convolution(StdTensor<posit<nbits, es>> const& input,
 		size_t input_i = input_idx + w.map_window[i];
 		size_t kernel_i = kernel_idx + w.kernel_window[i];
 
-		output += quire_mul(input[input_i], kernel[kernel_i]); 
+		output += Quire_mul(input[input_i], kernel[kernel_i]); 
 	}
 
 	return;
@@ -76,8 +77,8 @@ void convolution2d_thread(	StdTensor<posit<nbits, es>> const& input,
 	// Size of output matrix after convolution
 	size_t const size = output_channel_stride;
 
-	// Initialize quire
-	quire<nbits, es, capacity> q;
+	// Initialize Quire
+	Quire<nbits, es> q;
 
 	// Loop through batch
 	for(size_t i=0; i<n_samples; i++){
@@ -94,9 +95,9 @@ void convolution2d_thread(	StdTensor<posit<nbits, es>> const& input,
 				size_t input_channel = input_batch;
 				size_t weight_in_channel = weight_out_channel;
 	
-				// Set quire to bias value
+				// Set Quire to bias value
 				if(no_bias)
-					q.reset();
+					q.clear();
 				else
 					q = bias[j];
 
@@ -111,7 +112,7 @@ void convolution2d_thread(	StdTensor<posit<nbits, es>> const& input,
 					weight_in_channel += weight_in_channel_stride;
 				}
 				
-				// Convert result from quire to posit
+				// Convert result from Quire to posit
 				convert(q.to_value(), output[output_channel+idx]);
 			}
 				
@@ -130,6 +131,8 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 											StdTensor<posit<nbits, es>> const& bias,
 											size_t const stride=1,
 											size_t const padding=0,
+											size_t const dilation_input=1,
+											size_t const dilation_kernel=1,
 											Window* w=NULL ){
 	
 	// TODO: throw error if kernel and input have different in_channels
@@ -142,9 +145,9 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 		w = new Window();
 
 	if(!w->initialized){
-		w->forward(input.shape()[2], input.shape()[3],
-					weight.shape()[2], weight.shape()[3],
-					stride, padding	);
+		w->output_to_input(	input.shape()[2], input.shape()[3],
+							weight.shape()[2], weight.shape()[3],
+							stride, padding, dilation_input, dilation_kernel	);
 	}
 
 	// Get batch size and # of output channels
@@ -153,7 +156,7 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 
 	// Create tensor for output
 	StdTensor<posit<nbits, es>> output({batch_size, output_channels, w->output_height, w->output_width});
-	
+
 	// Strides to loop tensors
 	size_t const input_batch_stride = input.strides()[0];
 	size_t const output_batch_stride = output.strides()[0];
@@ -215,22 +218,24 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 											StdTensor<posit<nbits, es>> const& bias,
 											size_t const stride=1,
 											size_t const padding=0,
+											size_t const dilation_input=1,
+											size_t const dilation_kernel=1,
 											Window* w=NULL ){
 	
 	// TODO: throw error if kernel and input have different in_channels
 	// TODO: check other errors
-	
+
 	bool empty = (w==NULL);
 
 	if(empty)
 		w = new Window();
 
 	if(!w->initialized){
-		w->forward(input.shape()[2], input.shape()[3],
-					weight.shape()[2], weight.shape()[3],
-					stride, padding	);
+		w->output_to_input(	input.shape()[2], input.shape()[3],
+							weight.shape()[2], weight.shape()[3],
+							stride, padding, dilation_input, dilation_kernel	);
 	}
-	
+
 	// Check if bias is empty
 	bool const no_bias = bias.empty();
 
@@ -252,8 +257,8 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 	size_t input_batch = 0;
 	size_t output_batch = 0;
 
-	// Initialize quire
-	quire<nbits, es, capacity> q;
+	// Initialize Quire
+	Quire<nbits, es> q;
 
 	// Loop through batch
 	for(size_t i=0; i<batch_size; i++){
@@ -270,9 +275,9 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 				size_t input_channel = input_batch;
 				size_t weight_in_channel = weight_out_channel;
 	
-				// Set quire to bias value
+				// Set Quire to bias value
 				if(no_bias)
-					q.reset();
+					q.clear();
 				else
 					q = bias[j];
 
@@ -286,7 +291,7 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 					weight_in_channel += weight_in_channel_stride;
 				}
 				
-				// Convert result from quire to posit
+				// Convert result from Quire to posit
 				convert(q.to_value(), output[output_channel+idx]);
 			}
 				
@@ -343,8 +348,8 @@ void convolution2d_gradient_thread(	StdTensor<posit<nbits, es>> const& input,
 	std::cout << "idx0: " << idx0 << std::endl;
 	*/
 	
-	// Initialize quire
-	quire<nbits, es, capacity> q;
+	// Initialize Quire
+	Quire<nbits, es> q;
 
 	// First indices
 	size_t input_channel0 = in_channel0 * input_channel_stride;
@@ -372,8 +377,8 @@ void convolution2d_gradient_thread(	StdTensor<posit<nbits, es>> const& input,
 				size_t input_batch = input_channel;
 				size_t delta_batch = delta_channel;
 	
-				// Set quire to bias value
-				q.reset();
+				// Set Quire to bias value
+				q.clear();
 
 				// Loop through batch
 				for(size_t batch=0; batch<batch_size; batch++){
@@ -387,7 +392,7 @@ void convolution2d_gradient_thread(	StdTensor<posit<nbits, es>> const& input,
 
 				//std::cout << "out channel: " << i << "\t in channel: " << j << "\t idx: " << idx << "\t n: " << n << std::endl;
 
-				// Convert result from quire to posit
+				// Convert result from Quire to posit
 				convert(q.to_value(), dweight[n++]);
 				//getchar();
 
@@ -411,6 +416,7 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 												StdTensor<posit<nbits, es>> const& delta,
 												size_t const stride=1,
 												size_t const padding=0,
+												size_t const dilation=1,
 												Window* w=NULL ){
 	
 	// TODO: throw error if kernel and input have different in_channels
@@ -422,9 +428,9 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 		w = new Window();
 
 	if(!w->initialized){
-		w->forward(input.shape()[2], input.shape()[3],
-					delta.shape()[2], delta.shape()[3],
-					stride, padding	);
+		w->output_to_input(	input.shape()[2], input.shape()[3],
+							delta.shape()[2], delta.shape()[3],
+							dilation, padding, 1, stride	);
 	}
 
 	size_t const input_channels = input.shape()[1];
@@ -459,15 +465,11 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 		
 		// Go to next dweight element
 		dweight_begin += thread_samples;
-
-		threads.back().join();
 	}
 	
-	/*
 	for(std::thread& t : threads) {
 		t.join();
 	}
-	*/
 
 	if(empty)
 		delete w;
@@ -484,6 +486,7 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 												StdTensor<posit<nbits, es>> const& delta,
 												size_t const stride=1,
 												size_t const padding=0,
+												size_t const dilation=1,
 												Window* w=NULL ){
 	
 	// TODO: throw error if kernel and input have different in_channels
@@ -495,9 +498,9 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 		w = new Window();
 
 	if(!w->initialized){
-		w->forward(input.shape()[2], input.shape()[3],
-					delta.shape()[2], delta.shape()[3],
-					stride, padding	);
+		w->output_to_input(	input.shape()[2], input.shape()[3],
+							delta.shape()[2], delta.shape()[3],
+							dilation, padding, 1, stride	);
 	}
 
 	size_t const batch_size = input.shape()[0];
@@ -516,8 +519,8 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 	size_t delta_channel = 0;
 	size_t n=0;
 
-	// Initialize quire
-	quire<nbits, es, capacity> q;
+	// Initialize Quire
+	Quire<nbits, es> q;
 
 	// Loop through output (delta) channels
 	for(size_t i=0; i<output_channels; i++){
@@ -535,8 +538,8 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 				size_t input_batch = input_channel;
 				size_t delta_batch = delta_channel;
 	
-				// Set quire to bias value
-				q.reset();
+				// Set Quire to bias value
+				q.clear();
 
 				// Loop through batch
 				for(size_t batch=0; batch<batch_size; batch++){
@@ -549,7 +552,7 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 
 				}
 				
-				// Convert result from quire to posit
+				// Convert result from Quire to posit
 				convert(q.to_value(), dweight[n++]);
 			}
 				
@@ -575,28 +578,50 @@ StdTensor<T> rotate_weight(StdTensor<T> const& input) {
 							input.shape()[3]	});
 
 	// Strides
-	size_t out_channel_stride = output.strides()[0];
-	size_t in_channel_stride = output.strides()[1];
+	size_t in_channel_stride = output.strides()[0];
+	size_t out_channel_stride = output.strides()[1];
 
 	// Sizes
 	size_t size = output.size();
-	size_t nelem = in_channel_stride;
+	size_t nelem = out_channel_stride;
 
 	// Index of input
 	size_t i = 0;
 
-	// Loop through output in channels
-	for(size_t in_channel=0; in_channel<out_channel_stride; in_channel+=in_channel_stride){
-		// Loop through output out channels
-		for(size_t out_channel=in_channel; out_channel<size; out_channel+=out_channel_stride){
+	// Loop through output out channels
+	for(size_t out_channel=0; out_channel<in_channel_stride; out_channel+=out_channel_stride){
+		// Loop through output in channels
+		for(size_t in_channel=out_channel; in_channel<size; in_channel+=in_channel_stride){
 			// Loop through elements of channel of output
-			for(size_t idx = out_channel+nelem; idx --> out_channel; ){
+			for(size_t idx = in_channel+nelem; idx --> in_channel; ){
 				output[idx] = input[i++];
 			}
 		}
 	}
 
 	return output;
+}
+
+void rotate_window(	std::vector<size_t> const& input_shape,
+					std::vector<size_t> const& weight_shape,
+					size_t const stride, size_t const  padding, size_t const dilation,
+					Window& w) {
+
+	if(!w.initialized){
+		w.output_to_input(	input_shape[2], input_shape[3],
+							weight_shape[2], weight_shape[3],
+							stride, padding, dilation	);
+
+		std::cout << "kernel_size: " << weight_shape[2]*weight_shape[3] << std::endl;
+		std::cout << "before: " << w.kernel_window[0] << " " << w.kernel_window[1] << " " << w.kernel_window[2] << " " << std::endl;
+
+		size_t const last = weight_shape[2]*weight_shape[3] - 1;
+
+		for(size_t& idx : w.kernel_window)
+			idx = last-idx;
+
+		std::cout << "after: " << w.kernel_window[0] << " " << w.kernel_window[1] << " " << w.kernel_window[2] << " " << std::endl;
+	}
 }
 
 #endif /* CONVOLUTION_HPP */

@@ -1,11 +1,9 @@
 #ifndef SGD_HPP
 #define SGD_HPP
 
-// General headers
-#include <universal/posit/posit>
-
 // Custom headers
 #include "../layer/Parameter.hpp"
+#include "../optimizer/Optimizer.hpp"
 #include "../tensor/matrix.hpp"
 #include "../tensor/StdTensor.hpp"
 
@@ -31,91 +29,75 @@ struct SGDOptions {
 	T dampening;
 	T weight_decay;
 	bool nesterov;
-	bool first = true;
 };
 
 template <typename T>
-class SGD {
+class SGD : public Optimizer<T>{
 public:
 	SGD() { }
 
 	SGD(std::vector<Parameter<T>> parameters0, SGDOptions<T> options0) :
-		_parameters(parameters0),
+		Optimizer<T>(parameters0),
 		_options(options0)
 	{
 		if(_options.momentum!=0){
-			_velocities.reserve(_parameters.size());
+			_velocities.resize(parameters0.size());
 		}
 	}
 
-	void zero_grad() {
-		for(Parameter<T>& p : _parameters){
-			p.gradient.clear();
-		}
-
-		return;
-	}
-
-	void step() {
-		StdTensor<T> dweight;
-		T const pOne(1);
-
-		size_t i=0;
-		for(Parameter<T>& p : _parameters){
-			//std::cout << "weight = " << p.weight << std::endl;
-			
-			dweight = p.gradient;
-
-			if(_options.weight_decay != 0){
-				//dweight += p.weight * _options.weight_decay;
-				////fused(dweight, p.weight, pOne, _options.weight_decay);
-				fused(p.weight, dweight, dweight, _options.weight_decay);
-			}
-
-			if(_options.momentum != 0){
-				if(_options.first){
-					_velocities.push_back(dweight);
-				}
-				else{
-					//_velocities[i] *= _options.momentum;
-					if(_options.dampening!=0) {
-						//_velocities[i] += dweight * (1 - _options.dampening);
-						fused(_velocities[i], dweight, _options.momentum, pOne-_options.dampening);
-					}
-					else{
-						//_velocities[i] += dweight;
-						////fused(_velocities[i], dweight, _options.momentum, pOne);
-						fused(_velocities[i], dweight, _velocities[i], _options.momentum);
-					}
-				}
-				if(_options.nesterov){
-					//dweight += _velocities[i] * _options.momentum;
-					////fused(dweight, _velocities[i], pOne, _options.momentum);
-					fused(_velocities[i], dweight, dweight, _options.momentum);
-				}
-				else{
-					dweight = _velocities[i];
-				}
-				i++;
-			}
-
-			//dweight *= _options.learning_rate;
-			//p.weight -= dweight;
-			////fused(p.weight, dweight, pOne, -_options.learning_rate);
-			fused(dweight, p.weight, p.weight, -_options.learning_rate);
-		}
-
-		_options.first = false;
-
-		return;
-	}
-
-	SGDOptions<T> options() {
+	SGDOptions<T>& options() {
 		return _options;
 	}
 
 private:
-	std::vector<Parameter<T>> _parameters;
+
+	void update_parameter(Parameter<T>& p, size_t const i) override {
+		T const pOne(1);
+		StdTensor<T> dweight = p.gradient;
+
+		if(_options.weight_decay != 0){
+			//dweight += p.weight * _options.weight_decay;
+			//fused(dweight, p.weight, pOne, _options.weight_decay);
+			fused(p.weight, dweight, dweight, _options.weight_decay);
+		}
+
+		if(_options.momentum != 0){
+			if(_velocities[i].empty()){
+				_velocities[i] = dweight;
+			}
+			else{
+				//_velocities[i] *= _options.momentum;
+				if(_options.dampening!=0) {
+					//_velocities[i] += dweight * (1 - _options.dampening);
+					fused(_velocities[i], dweight, _options.momentum, pOne-_options.dampening);
+				}
+				else{
+					//_velocities[i] += dweight;
+					//fused(_velocities[i], dweight, _options.momentum, pOne);
+					fused(_velocities[i], dweight, _velocities[i], _options.momentum);
+				}
+			}
+			if(_options.nesterov){
+				//dweight += _velocities[i] * _options.momentum;
+				//fused(dweight, _velocities[i], pOne, _options.momentum);
+				fused(_velocities[i], dweight, dweight, _options.momentum);
+			}
+			else{
+				dweight = _velocities[i];
+			}
+		}
+
+		//dweight *= _options.learning_rate;
+		//p.weight -= dweight;
+		//fused(p.weight, dweight, pOne, -_options.learning_rate);
+		fused(dweight, p.weight, p.weight, -_options.learning_rate);
+
+		// When using mixed precision, update different weights
+		p.update();
+
+		return;
+	}
+
 	SGDOptions<T> _options;	
 	std::vector<StdTensor<T>> _velocities;
 };

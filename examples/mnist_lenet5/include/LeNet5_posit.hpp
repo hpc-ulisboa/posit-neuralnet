@@ -3,19 +3,17 @@
 
 // Custom headers
 #include "positnn/activation/ReLU.hpp"
+#include "positnn/layer/BackScale.hpp"
 #include "positnn/layer/Conv2d.hpp"
 #include "positnn/layer/Layer.hpp"
 #include "positnn/layer/Linear.hpp"
 #include "positnn/layer/MaxPool2d.hpp"
 #include "positnn/tensor/StdTensor.hpp"
 
-template <typename Posit>
-class LeNet5_posit : public Layer<Posit>{
+template <typename T>
+class LeNet5_posit : public Layer<typename T::Optimizer>{
 public:
-	using ScalePosit = posit<32, 3>;
-
 	LeNet5_posit() :
-		bs(6),
 		conv1(1, 6, 5, 1, 2),
 		conv2(6, 16, 5),
 		conv3(16, 120, 5),
@@ -31,70 +29,61 @@ public:
 		this->register_module(fc2);
 	}
 
-	StdTensor<Posit> forward(StdTensor<Posit> input) {
-		input = conv1.forward(input);
-		input = max_pool1.forward(input);
-		input = relu1.forward(input);
+	StdTensor<typename T::Forward> forward(StdTensor<typename T::Forward> x) {
+		x = conv1.forward(x);
+		x = max_pool1.forward(x);
+		x = relu1.forward(x);
 
-		input = conv2.forward(input);
-		input = max_pool2.forward(input);
-		input = relu2.forward(input);
+		x = conv2.forward(x);
+		x = max_pool2.forward(x);
+		x = relu2.forward(x);
 
-		input = conv3.forward(input);
-		input = relu3.forward(input);
+		x = conv3.forward(x);
+		x = relu3.forward(x);
 
-		input.reshape({input.shape()[0], 120});
+		x.reshape({x.shape()[0], 120});
 
-		input = fc1.forward(input);
-		input = relu4.forward(input);
+		x = fc1.forward(x);
+		x = relu4.forward(x);
 
-		input = fc2.forward(input);
-		return input;
+		x = fc2.forward(x);
+		return x;
 	}
 
-	StdTensor<Posit> backward(StdTensor<Posit> error) {
-		error = bs.backward(5, error);
+	StdTensor<typename T::Backward> backward(StdTensor<typename T::Backward> x) {
+		x = fc2.backward(x);
 
-		error = fc2.backward(error);
-		error = bs.backward(4, error, fc2.parameters());
+		x = relu4.backward(x);
+		x = fc1.backward(x);
 
-		error = relu4.backward(error);
-		error = fc1.backward(error);
-		error = bs.backward(3, error, fc1.parameters());
+		x.reshape({x.shape()[0], 120, 1 ,1});
 
-		error.reshape({error.shape()[0], 120, 1 ,1});
+		x = relu3.backward(x);
+		x = conv3.backward(x);
 
-		error = relu3.backward(error);
-		error = conv3.backward(error);
-		error = bs.backward(2, error, conv3.parameters());
+		x = relu2.backward(x);
+		x = max_pool2.backward(x);
+		x = conv2.backward(x);
 
-		error = relu2.backward(error);
-		error = max_pool2.backward(error);
-		error = conv2.backward(error);
-		error = bs.backward(1, error, conv2.parameters());
+		x = relu1.backward(x);
+		x = max_pool1.backward(x);
+		x = conv1.backward(x);
 
-		error = relu1.backward(error);
-		error = max_pool1.backward(error);
-		error = conv1.backward(error);
-		error = bs.backward(0, error, conv1.parameters());
-
-		return error;
+		return x;
 	}
-
-	BackScale<ScalePosit> bs;
 
 private:
-	Conv2d<Posit> conv1;
-	Conv2d<Posit> conv2;
-	Conv2d<Posit> conv3;
-	ReLU<Posit> relu1;
-	ReLU<Posit> relu2;
-	ReLU<Posit> relu3;
-	ReLU<Posit> relu4;
-	MaxPool2d<Posit> max_pool1;
-	MaxPool2d<Posit> max_pool2;
-	Linear<Posit> fc1;
-	Linear<Posit> fc2;
+	Conv2d<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> conv1;
+	Conv2d<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> conv2;
+	Conv2d<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> conv3;
+	MaxPool2d<typename T::Forward, typename T::Backward> max_pool1;
+	MaxPool2d<typename T::Forward, typename T::Backward> max_pool2;
+	Linear<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> fc1;
+	Linear<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> fc2;
+	ReLU relu1;
+	ReLU relu2;
+	ReLU relu3;
+	ReLU relu4;
 };
 
 #endif /* LENET5_POSIT_HPP */

@@ -16,6 +16,7 @@
 
 // Custom headers
 #include "StdTensor.hpp"
+#include "../utils/Quire.hpp"
 
 // Namespaces
 using namespace sw::unum;
@@ -32,11 +33,11 @@ void sum_first_thread(	StdTensor<posit<nbits, es>> const& input,
 	size_t const size = input.size();
 	size_t const stride = input.strides()[0];
 
-	quire<nbits, es, capacity> q;
+	Quire<nbits, es> q;
 
 	// Loop through output elements
 	for(size_t i=i_begin; i<i_end; i++) {
-		q.reset();
+		q.clear();
 		
 		// Loop thorugh first axis of input
 		for(size_t j=i; j<size; j+=stride){
@@ -108,11 +109,11 @@ StdTensor<posit<nbits, es>> sum_first(const StdTensor<posit<nbits, es>>& input){
 	size_t const size = input.size();
 	size_t const stride = input.strides()[0];
 
-	quire<nbits, es, capacity> q;	// TODO: COMPUTE BEST CAPACITY
+	Quire<nbits, es> q;	// TODO: COMPUTE BEST CAPACITY
 
 	// Loop through output elements
 	for(size_t i=0; i<stride; i++) {
-		q.reset();
+		q.clear();
 		
 		// Loop thorugh first axis of input
 		for(size_t j=i; j<size; j+=stride){
@@ -140,13 +141,13 @@ void sum_last2_thread(	StdTensor<posit<nbits, es>> const& input,
 	size_t const size = output.size();
 	size_t const stride = (input.dim()>2) ? input.strides()[input.dim()-3] : size;
 
-	quire<nbits, es, capacity> q;
+	Quire<nbits, es> q;
 	size_t begin = input_begin;
 	size_t end = input_begin+stride;
 	
 	// Loop through output elements
 	for(size_t n=output_begin; n<output_end; n++) {
-		q.reset();
+		q.clear();
 		
 		// Loop through axes to sum
 		for(size_t j=begin; j<end; j++){
@@ -232,13 +233,13 @@ StdTensor<posit<nbits, es>> sum_last2(StdTensor<posit<nbits, es>> const& input) 
 	size_t const size = output.size();
 	size_t const stride = (input.dim()>2) ? input.strides()[input.dim()-3] : size;
 
-	quire<nbits, es, capacity> q;	// TODO: COMPUTE BEST CAPACITY
+	Quire<nbits, es> q;	// TODO: COMPUTE BEST CAPACITY
 	size_t begin = 0;
 	size_t end = stride;
 
 	// Loop through output
 	for(size_t n=0; n<size; n++) {
-		q.reset();
+		q.clear();
 		
 		// Loop through axes to sum
 		for(size_t j=begin; j<end; j++){
@@ -272,7 +273,7 @@ StdTensor<posit<nbits, es>> sum(const StdTensor<posit<nbits, es>>& a, const size
 
 	StdTensor<posit<nbits, es>> c(new_shape);
 
-	quire<nbits, es, capacity> q;	// TODO: COMPUTE BEST CAPACITY
+	Quire<nbits, es> q;	// TODO: COMPUTE BEST CAPACITY
 	
 	size_t n=0;
 	size_t const size = a.size();
@@ -282,7 +283,7 @@ StdTensor<posit<nbits, es>> sum(const StdTensor<posit<nbits, es>>& a, const size
 
 	for(size_t i=0; i<size; i+=loop_stride) {	// loop blocks
 		for(size_t j=0; j<stride; j++){	// loop beginning elements of block
-			q.reset();
+			q.clear();
 			for(size_t k=i+j, l=0; l<axis_size; k+=stride, l++){	// loop elements to sum
 				q += a[k];
 			}

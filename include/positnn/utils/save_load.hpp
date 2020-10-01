@@ -9,8 +9,8 @@
 
 //#include "Net.hpp"
 
-template <typename PositFile, typename T>
-int save(T& object, const char* filename) {
+template <typename PositFile, typename T, typename String>
+int save(T& object, String filename) {
 	std::ofstream file;
 	file.open(filename, std::ios::out | std::ios::binary);
 	
@@ -31,8 +31,8 @@ int save(T& object, const char* filename) {
 	return 0;
 }
 
-template <typename PositFile, typename T>
-int load(T& object, const char* filename) {
+template <typename PositFile, typename T, typename String>
+int load(T& object, String filename) {
 	std::ifstream file;
 	file.open(filename, std::ios::in | std::ios::binary);
 

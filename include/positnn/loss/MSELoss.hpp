@@ -7,14 +7,13 @@
 // Namespaces
 using namespace sw::unum;
 
-template <typename T, typename targetT, typename lossT=float>
-class mse_loss : public Loss<T, lossT>{
+template <class ForwardT, class BackwardT=ForwardT, typename lossT=float>
+class mse_loss : public Loss<BackwardT, lossT>{
 public:
 	mse_loss() { }
 
-	mse_loss(StdTensor<T>& _output, StdTensor<targetT>& _target, Reduction reduction=Reduction::Mean) :
-		output(_output),
-		target(_target)	
+	mse_loss(StdTensor<ForwardT> const& output, StdTensor<ForwardT> const& target, Reduction reduction=Reduction::Mean) :
+		error(output.shape())
 	{
 		size_t const size = output.size();
 
@@ -23,31 +22,33 @@ public:
 
 		for(size_t i=0; i<size; i++){
 			// Calculate loss
-			targetT error = targetT(output[i]) - target[i];
-			this->loss += lossT(error*error);
+			ForwardT error_forward = output[i] - target[i];
+			this->loss += lossT(error_forward * error_forward);
+			
+			// Copy to be used in backward
+			error[i] = error_forward;
 		}
 
 		if(reduction == Reduction::Mean)
 			this->loss /= size;
 	}
 
-	StdTensor<T> derivative() {
-		StdTensor<T> dloss(output);
+	StdTensor<BackwardT> derivative() {
+		StdTensor<BackwardT> dloss = error * 2;
 
-		size_t const size = output.size();
-
-		for(size_t i=0; i<size; i++){
+		/*
+		for(size_t i=0, size=dloss.size(); i<size; i++){
 			// Calculate derivative of loss
-			dloss[i] -= T(target[i]);
+			dloss[i] = output[i] - target[i];
 			dloss[i] *= 2;
 		}
+		*/
 
 		return dloss;
 	}
 
 private:
-	StdTensor<T> output;
-	StdTensor<targetT> target;
+	StdTensor<BackwardT> error;
 };
 
 #endif /* MSELoss_HPP */

@@ -26,9 +26,9 @@ template <size_t nbits, size_t es, size_t capacity=nbits-1>
 void do_maxpool2d(	StdTensor<posit<nbits, es>> const& input,
 					posit<nbits, es>& output,
 					Window const& w, size_t* max_idx,
-					size_t const input_idx, size_t const idx	){
+					size_t kernel_size,	size_t const input_idx, size_t const idx	){
 	
-	// Begin and end element to operate
+	// Begin and end element to operate (multiply)
 	size_t const begin = w.window_idx[idx];
 	size_t const end = w.window_idx[idx+1];
 
@@ -70,6 +70,7 @@ template <size_t nbits, size_t es, size_t capacity=nbits-1>
 void maximumpool2d_thread(	StdTensor<posit<nbits, es>> const& input,
 							StdTensor<posit<nbits, es>>& output,
 							Window const* w, std::vector<size_t>* max_idx,
+							const size_t kernel_total_size,
 							size_t input_batch, size_t output_batch,
 							size_t const n_samples	){
 
@@ -102,6 +103,7 @@ void maximumpool2d_thread(	StdTensor<posit<nbits, es>> const& input,
 				// Compute maximum pooling for that block
 				do_maxpool2d<nbits, es, capacity>(	input, output[output_idx],
 													*w, max_i,
+													kernel_total_size,
 													input_channel, idx	);
 			}
 				
@@ -152,6 +154,8 @@ StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& in
 	size_t const input_batch_stride = input.strides()[0];
 	size_t const output_batch_stride = output.strides()[0];
 
+	size_t const kernel_total_size = kernel_size*kernel_size;
+	
 	// Distribute threads (each thread will take care of the same # of samples)
 	const size_t max_threads = (LL_THREADS<batch_size) ? LL_THREADS : batch_size;
 	std::vector<std::thread> threads;
@@ -179,6 +183,7 @@ StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& in
 		threads.push_back(std::thread(maximumpool2d_thread<nbits, es, capacity>,
 										std::cref(input), std::ref(output),
 										w, max_idx,
+										kernel_total_size,
 										input_samples_begin, output_samples_begin,
 										thread_samples	));
 		
@@ -243,6 +248,8 @@ StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& in
 
 	size_t const size = output_channel_stride;
 
+	size_t const kernel_total_size = kernel_size*kernel_size;
+
 	size_t input_batch = 0;
 	size_t output_batch = 0;
 
@@ -262,6 +269,7 @@ StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& in
 				// Compute maximum pooling for that block
 				do_maxpool2d<nbits, es, capacity>(	input, output[output_idx],
 													*w, max_i,
+													kernel_total_size,
 													input_channel, idx	);
 			}
 				
@@ -284,7 +292,7 @@ StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& in
 template <size_t nbits, size_t es, size_t capacity=nbits-1>
 void do_maxpool2d_backward(	StdTensor<posit<nbits, es>> const& deltaN,
 							StdTensor<posit<nbits, es>>& deltaN_1, 
-							size_t const deltaN_channel,
+							size_t const deltaN_channel, size_t const deltaN_1_channel,
 							size_t const size, std::vector<size_t> const& max_idx	){
 	
 	std::unordered_map<size_t, std::vector<size_t>> map_input_output;
@@ -338,105 +346,6 @@ void do_maxpool2d_backward(	StdTensor<posit<nbits, es>> const& deltaN,
 	return;
 }
 					
-#ifdef USING_LL_THREADS
-
-template <size_t nbits, size_t es>
-void maximumpool2d_backward_thread1(	StdTensor<posit<nbits, es>> const& deltaN,
-										StdTensor<posit<nbits, es>>& deltaN_1,
-										std::vector<size_t> const& max_idx,
-										size_t const begin, size_t const n	){
-	
-	for(size_t i=begin, end=begin+n; i<end; i++) {
-		deltaN_1[max_idx[i]] = deltaN[i];
-	}
-	
-	return;
-}
-
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
-void maximumpool2d_backward_thread2(	StdTensor<posit<nbits, es>> const& deltaN,
-										StdTensor<posit<nbits, es>>& deltaN_1,
-										std::vector<size_t> const& max_idx,
-										size_t const begin_sample, size_t const n_samples	){
-	
-	// Strides to loop tensors
-	size_t const deltaN_channel_stride = deltaN.strides()[1];
-	
-	// Number of elements of deltaN matrix (size of channel)
-	size_t const size = deltaN_channel_stride;
-
-	size_t deltaN_channel = begin_sample * deltaN_channel_stride;
-
-	// Loop through matrices
-	for(size_t i=0; i<n_samples; i++) {
-		// Compute max pooling backpropagation for that image
-		do_maxpool2d_backward(	deltaN, deltaN_1,
-								deltaN_channel,
-								size, max_idx	);
-
-		deltaN_channel += deltaN_channel_stride;
-	}
-	
-	return;
-}
-
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
-StdTensor<posit<nbits, es>> maximumpool2d_backward(	StdTensor<posit<nbits, es>> const& deltaN,
-													std::vector<size_t> const& input_shape,
-													size_t const kernel_size, size_t const stride,
-													std::vector<size_t> const& max_idx	){
-
-	// If we know there is no overlap between windows, 1st algorthm, else, 2nd algorithm
-	bool const first = (kernel_size <= stride);
-	void (*thread_function)(StdTensor<posit<nbits, es>> const&,
-							StdTensor<posit<nbits, es>>&,
-							std::vector<size_t> const&,
-							size_t const, size_t const) = (first) ?
-								maximumpool2d_backward_thread1<nbits, es> :
-								maximumpool2d_backward_thread2<nbits, es, capacity>;
-
-	StdTensor<posit<nbits, es>> deltaN_1(input_shape);
-	
-	// 1st algorithm divides output tensor by entries
-	// 2nd algorithm divides output tensor by images/channels
-	size_t const size = (first) ? 
-							max_idx.size() :
-							deltaN_1.shape()[0]*deltaN_1.shape()[1];
-	
-	// Declare threads (each thread will take care of the same # of samples)
-	std::vector<std::thread> threads;
-	size_t const max_threads = (LL_THREADS<size) ? LL_THREADS : size;
-	threads.reserve(max_threads);
-	
-	// Calculate load for each thread
-	size_t const n_samples = size / max_threads;
-	size_t const nthreads_more = size % max_threads;
-
-	// Start at first sample
-	size_t begin = 0;
-
-	for(size_t t=0; t<max_threads; t++) {
-		// Get number of samples for this thread
-		size_t const thread_samples = (t<nthreads_more) ? n_samples+1 : n_samples;
-
-		threads.push_back(std::thread(thread_function,
-										std::cref(deltaN), std::ref(deltaN_1),
-										std::cref(max_idx),
-										begin, thread_samples	));
-
-		// Go to next samples
-		begin += thread_samples;
-	}	
-
-	for(std::thread& t : threads) {
-		t.join();
-	}	
-
-	return deltaN_1;
-}
-
-#else
-
 template <size_t nbits, size_t es, size_t capacity=nbits-1>
 StdTensor<posit<nbits, es>> maximumpool2d_backward(	StdTensor<posit<nbits, es>> const& deltaN,
 													std::vector<size_t> const& input_shape,
@@ -452,29 +361,30 @@ StdTensor<posit<nbits, es>> maximumpool2d_backward(	StdTensor<posit<nbits, es>> 
 	}
 	else {
 		// Strides to loop tensors
+		size_t const deltaN_1_channel_stride = deltaN_1.strides()[1];
 		size_t const deltaN_channel_stride = deltaN.strides()[1];
 		
 		// Number of channels (matrices) of input/output
 		size_t const total_channels = deltaN_1.shape()[0]*deltaN_1.shape()[1];
-		// Number of elements of deltaN matrix (size of channel)
+		// Number of elements of deltaN_1 matrix (size of channel)
 		size_t const size = deltaN_channel_stride;
 
+		size_t deltaN_1_channel = 0;
 		size_t deltaN_channel = 0;
 
 		// Loop through matrices
 		for(size_t i=0; i<total_channels; i++) {
 			// Compute max pooling backpropagation for that image
 			do_maxpool2d_backward(	deltaN, deltaN_1,
-									deltaN_channel,
+									deltaN_channel, deltaN_1_channel,
 									size, max_idx	);
 
+			deltaN_1_channel += deltaN_1_channel_stride;
 			deltaN_channel += deltaN_channel_stride;
 		}
 	}	
 
 	return deltaN_1;
 }
-
-#endif /* USING_LL_THREADS */
 
 #endif /* MAXIMUMPOOL_HPP */

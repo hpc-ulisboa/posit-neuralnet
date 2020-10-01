@@ -16,6 +16,9 @@ struct FloatNetImpl : torch::nn::Module {
 	}
 
 	torch::Tensor forward(torch::Tensor x) {
+		// Flatten data
+		x = x.view({-1, 784});
+
 		x = linear1(x);
 		//x = batch_norm1(x);
 		x = torch::sigmoid(x);

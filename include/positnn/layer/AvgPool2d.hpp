@@ -5,15 +5,16 @@
 #include <universal/posit/posit>
 
 // Custom headers
-#include "Layer.hpp"
+//#include "Layer.hpp"
 #include "../tensor/averagepool.hpp"
 #include "../tensor/StdTensor.hpp"
 
 // Namespaces
 using namespace sw::unum;
 
-template <typename Posit>
-class AvgPool2d : public Layer<Posit> {
+template <typename ForwardT, typename BackwardT=ForwardT>
+class AvgPool2d {
+//class AvgPool2d : public Layer<Posit> {
 public:
 	AvgPool2d(size_t _kernel_size, size_t _stride, size_t _padding=0) :
 		kernel_size(_kernel_size),
@@ -23,12 +24,12 @@ public:
 			stride = _kernel_size;
 	}
 
-	StdTensor<Posit> forward(StdTensor<Posit>& x) {
+	StdTensor<ForwardT> forward(StdTensor<ForwardT> const& x) {
 		input_shape = x.shape();
 		return averagepool2d(x, kernel_size, stride, padding, &w1);
 	}
 
-	StdTensor<Posit> backward(StdTensor<Posit>& delta) {
+	StdTensor<BackwardT> backward(StdTensor<BackwardT> const& delta) {
 		// set deltaN_1 by blocks to the value of delta
 		return averagepool2d_backward(delta, input_shape, kernel_size, stride, padding, &w2);
 	}

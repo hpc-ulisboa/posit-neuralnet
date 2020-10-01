@@ -5,13 +5,10 @@
 #include <iostream>
 #include <torch/torch.h>
 
-// Custom headers
-#include "FloatNet.hpp"
-
-template <typename DataLoader>
+template <class Model, typename DataLoader>
 void train_float(	size_t epoch,
 					size_t const num_epochs,
-					FloatNet& model,
+					Model& model,
 					DataLoader& data_loader,
 					torch::optim::Optimizer& optimizer,
 					size_t const kLogInterval,
@@ -30,9 +27,6 @@ void train_float(	size_t epoch,
 		auto data = batch.data;
 		auto target = batch.target;
 		
-		// Flatten data
-		data = data.reshape({batch.data.size(0), 784});
-
 		// Convert data and target to float32 and long
 		data = data.to(torch::kF32);
 		target = target.to(torch::kLong);

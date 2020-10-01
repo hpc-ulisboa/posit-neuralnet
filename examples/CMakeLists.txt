@@ -63,6 +63,7 @@ include_directories("${CMAKE_CURRENT_LIST_DIR}/../universal/include")
 
 # Include PositNN (PyTorch for posits) ####################################
 include_directories("${CMAKE_CURRENT_LIST_DIR}/../include")
+add_definitions(-D QUIRE_MODE=2)
 ###########################################################################
 
 # Setup executables #######################################################
@@ -70,5 +71,4 @@ add_executable(train_test ${SRC_FOLDER}/train_test.cpp)
 target_link_libraries(train_test ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(train_test "${TORCH_LIBRARIES}")
 set_property(TARGET train_test PROPERTY CXX_STANDARD 14)
-
 ###########################################################################

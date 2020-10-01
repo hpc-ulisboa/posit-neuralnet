@@ -10,10 +10,12 @@
 #include "activation/Tanh.hpp"
 
 // Layers (and initialization functions and parameters)
+#include "layer/AdaptiveScale.hpp"
 #include "layer/AvgPool2d.hpp"
 #include "layer/BatchNorm1d.hpp"
 #include "layer/BackScale.hpp"
 #include "layer/Conv2d.hpp"
+#include "layer/Dropout.hpp"
 #include "layer/init.hpp"
 #include "layer/Layer.hpp"
 #include "layer/Linear.hpp"
@@ -27,6 +29,7 @@
 #include "loss/NLLLoss.hpp"
 
 // Optimizers
+#include "optimizer/Optimizer.hpp"
 #include "optimizer/SGD.hpp"
 #include "optimizer/SGDMixed.hpp"
 
@@ -36,12 +39,15 @@
 #include "tensor/convolution.hpp"
 #include "tensor/matrix.hpp"
 #include "tensor/maximumpool.hpp"
+#include "tensor/MixedTensor.hpp"
 #include "tensor/stats.hpp"
 #include "tensor/StdTensor.hpp"
 #include "tensor/Window.hpp"
 
 // Utils and misc
+#include "utils/ArgumentParser.hpp"
 #include "utils/print_parameters.hpp"
+#include "utils/Quire.hpp"
 #include "utils/save_load.hpp"
 #include "utils/train_test_threads.hpp"
 #include "utils/type_name.hpp"

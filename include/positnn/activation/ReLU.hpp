@@ -10,26 +10,31 @@
 // Namespaces
 using namespace sw::unum;
 
-template <typename Posit>
 class ReLU {
 public:	
 	ReLU() { }
 
-	StdTensor<Posit> forward(StdTensor<Posit>& x) {
-		output = x;
+	template <typename T>
+	StdTensor<T> forward(StdTensor<T> x) {
+		zero.resize(x.size());
 
-		for(size_t i=0, size=output.size(); i<size; i++) {
-			if(output[i].isneg() || output[i].iszero()) {
-				output[i].setzero();
+		for(size_t i=0, size=x.size(); i<size; i++) {
+			if(x[i].isneg() || x[i].iszero()) {
+				x[i].setzero();
+				zero[i] = true;
+			}
+			else {
+				zero[i] = false;
 			}
 		}
 
-		return output;
+		return x;
 	}
 
-	StdTensor<Posit> backward(StdTensor<Posit> delta) {
+	template <typename T>
+	StdTensor<T> backward(StdTensor<T> delta) {
 		for(size_t i=0, size=delta.size(); i<size; i++){
-			if(output[i].isneg() || output[i].iszero()) {
+			if(zero[i]) {
 				delta[i].setzero();
 			}
 		}
@@ -38,7 +43,7 @@ public:
 	}
 
 private:
-	StdTensor<Posit> output;
+	std::vector<bool> zero;
 };
 
 #endif /* RELU_HPP */

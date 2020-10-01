@@ -11,45 +11,48 @@
 // Namespaces
 using namespace sw::unum;
 
-template <typename Posit>
+template <typename ForwardT, typename BackwardT=ForwardT>
 class Sigmoid {
 public:	
 	Sigmoid() { }
 
-	StdTensor<Posit> forward(StdTensor<Posit>& x, bool approximate=true) {
-		constexpr size_t es = Posit::es;
-		output = StdTensor<Posit>(x.shape());
+	StdTensor<ForwardT> forward(StdTensor<ForwardT> const& x, bool approximate=true) {
+		StdTensor<ForwardT> y(x.shape());
 
-		for(size_t i=0, size=output.size(); i<size; i++) {
-			if(approximate && es==0) {
-				output[i] = sigmoid_approx(x[i]);
-			}
-			else {
-				output[i] = 1/(1+exp(-x[i]));
-			}
+		for(size_t i=0, size=x.size(); i<size; i++) {
+			if(approximate && ForwardT::es==0)
+				y[i] = sigmoid_approx(x[i]);
+			else
+				y[i] = 1/(1+exp(-x[i]));
 		}
 
-		return output;
+		output = y;
+
+		return y;
 	}
 
-	StdTensor<Posit> backward(StdTensor<Posit>& w_delta) {
-		StdTensor<Posit> deltaN = derivative();
+	StdTensor<BackwardT> backward(StdTensor<BackwardT> const& w_delta) {
+		StdTensor<BackwardT> deltaN = derivative();
 		deltaN *= w_delta;
 		return deltaN;
 	}
 
-	StdTensor<Posit> derivative() const {
+	StdTensor<BackwardT> derivative() const {
 		// TODO: protect against initialized output
-		StdTensor<Posit> dx(output);
+		StdTensor<BackwardT> dx(output.shape());
 
-		for(Posit& p : dx)
-			p *= (1-p);
+		BackwardT pOne(1);
+
+		for(size_t i=0, size=dx.size(); i<size; i++) {
+			convert( fam_corrected(pOne, -output[i], output[i]) ,
+					 dx[i] );
+		}
 		
 		return dx;
 	}
 
 private:
-	StdTensor<Posit> output;
+	StdTensor<BackwardT> output;
 };
 
 #endif /* SIGMOID_HPP */

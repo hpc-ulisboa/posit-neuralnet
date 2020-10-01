@@ -17,6 +17,7 @@
 // Custom headers
 #include "StdTensor.hpp"
 #include "Window.hpp"
+#include "../utils/Quire.hpp"
 
 // Namespaces
 using namespace sw::unum;
@@ -42,8 +43,8 @@ void do_avgpool2d(	StdTensor<posit<nbits, es>> const& input,
 	}
 	// More than 1 element
 	else{
-		// Initialize quire
-		quire<nbits, es, capacity> q;
+		// Initialize Quire
+		Quire<nbits, es> q;
 
 		// Loop through elements to operate with input and kernel
 		for(size_t i=begin; i<end; i++){
@@ -124,9 +125,9 @@ StdTensor<posit<nbits, es>> averagepool2d(	StdTensor<posit<nbits, es>> const& in
 		w = new Window();
 
 	if(!w->initialized){
-		w->forward(input.shape()[2], input.shape()[3],
-					kernel_size, kernel_size,
-					stride, padding);
+		w->output_to_input(	input.shape()[2], input.shape()[3],
+							kernel_size, kernel_size,
+							stride, padding	);
 	}
 
 	// Get batch size and # of input channels
@@ -211,9 +212,9 @@ StdTensor<posit<nbits, es>> averagepool2d(	StdTensor<posit<nbits, es>> const& in
 		w = new Window();
 
 	if(!w->initialized){
-		w->forward(input.shape()[2], input.shape()[3],
-					kernel_size, kernel_size,
-					stride, padding	);
+		w->output_to_input(	input.shape()[2], input.shape()[3],
+							kernel_size, kernel_size,
+							stride, padding	);
 	}
 
 	size_t const batch_size = input.shape()[0];
@@ -266,8 +267,8 @@ StdTensor<posit<nbits, es>> averagepool2d(	StdTensor<posit<nbits, es>> const& in
 #endif /* USING_LL_THREADS */
 
 template <size_t nbits, size_t es, size_t capacity=nbits-1>
-StdTensor<posit<nbits, es>> averagepool2d_backward(	StdTensor<posit<nbits, es>> delta,
-													std::vector<size_t> input_shape,
+StdTensor<posit<nbits, es>> averagepool2d_backward(	StdTensor<posit<nbits, es>> const& delta,
+													std::vector<size_t> const& input_shape,
 													size_t const kernel_size,
 													size_t const stride,
 													size_t const padding,
@@ -281,9 +282,9 @@ StdTensor<posit<nbits, es>> averagepool2d_backward(	StdTensor<posit<nbits, es>> 
 		w = new Window();
 
 	if(!w->initialized){
-		w->backward(input_shape[2], input_shape[3],
-					kernel_size, kernel_size,
-					stride, padding	);
+		w->input_to_output(	input_shape[2], input_shape[3],
+							kernel_size, kernel_size,
+							stride, padding	);
 	}
 
 	size_t const kernel_total_size = kernel_size*kernel_size;

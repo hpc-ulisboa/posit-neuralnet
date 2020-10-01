@@ -18,7 +18,8 @@ template <typename T>
 class StdTensor{
 public:
 	StdTensor()	:
-		m_dim()
+		m_dim(0),
+		m_size(0)
 	{ }
 
 	StdTensor(const std::vector<size_t>& shape0) : 
@@ -174,12 +175,21 @@ public:
 
 	// Iterators
 	typedef typename std::vector<T>::iterator iterator;
+	typedef typename std::vector<T>::const_iterator const_iterator;
 
 	iterator begin() {
 		return m_data.begin();
 	}	
 	
 	iterator end() {
+		return m_data.end();
+	}
+
+	const_iterator begin() const{
+		return m_data.begin();
+	}	
+	
+	const_iterator end() const {
 		return m_data.end();
 	}	
 
@@ -273,7 +283,12 @@ public:
 		return *this;
 	}
 
-	template <typename Scalar>
+	template <class otherT>
+	StdTensor<T>& operator+= (const StdTensor<otherT>& other){
+		return *this += StdTensor<T>(other);
+	}
+
+	template <class Scalar>
 	StdTensor<T>& operator+= (const Scalar& other){
 		size_t i;
 		const T aux = T(other);
@@ -420,12 +435,6 @@ public:
 	}	
 
 private:
-	size_t m_dim;
-	size_t m_size;
-	std::vector<size_t> m_shape;
-	std::vector<size_t> m_strides;
-	std::vector<T> m_data;
-
 	void compute_strides() {
 		m_strides.resize(m_dim);
 		m_strides[m_dim - 1] = 1;
@@ -434,6 +443,13 @@ private:
 				m_strides.rbegin() + 1,
 				std::multiplies<size_t>());
 	}
+
+	size_t m_dim;
+	size_t m_size;
+	std::vector<size_t> m_shape;
+	std::vector<size_t> m_strides;
+	std::vector<T> m_data;
+	
 //public:
 	//std::vector<T> m_data;
 };
@@ -483,6 +499,103 @@ inline StdTensor<T> operator/ (const StdTensor<T>& a, const Scalar& b) {
 	StdTensor<T> c = a;
 	c /= b;
 	return c;
+}
+
+// Functions to apply to tensors (useful in convolution layer)
+
+template <typename T>
+StdTensor<T> sequence(std::vector<size_t> const& shape) {
+	StdTensor<T> y(shape);
+
+	for(size_t i=0, size=y.size(); i<size; i++) {
+		y[i] = T(i);
+	}
+
+	return y;
+}
+
+template <typename T>
+StdTensor<T> pad(StdTensor<T> const& x, unsigned int const padding, T const value=0) {
+	if(padding==0)
+		return x;
+
+	int const height0 = x.shape()[0];
+	int const width0 = x.shape()[1];
+
+	size_t const height = height0 + 2*padding;
+	size_t const width = width0 + 2*padding;
+
+	StdTensor<T> y({height, width});
+	int const iend = height0 + padding;
+	int const jend = width0 + padding;
+	size_t m=0, n=0;
+
+	// Loop through rows
+	for(int i=-padding; i<iend; i++) {
+		if(i<0 || i>=height0) {
+			// Pad top and bottom rows
+			for(int j=-padding; j<jend; j++) {
+				y[m++] = value;
+			}
+		}
+		else {
+			// Loop through columns
+			for(int j=-padding, jend=width0+padding; j<jend; j++) {
+				if(j<0 || j>=width0) {
+					y[m++] = value;
+				}
+				else {
+					y[m++] = x[n++];
+				}
+			}
+		}
+	}
+
+	return y;
+}
+
+template <typename T>
+StdTensor<T> dilate(StdTensor<T> const& x, size_t const dilation, T const value=0) {
+	if(dilation==1)
+		return x;
+
+	size_t const height = (x.shape()[0]-1)*dilation + 1;
+	size_t const width = (x.shape()[1]-1)*dilation + 1;
+
+	StdTensor<T> y({height, width});
+	size_t const expand = dilation-1;
+	size_t const stride = expand*width;
+	size_t const jend = width-1;
+	size_t k = 0;
+
+	// Loop through rows
+	for(size_t i=0, size=y.size(); i<size; ) {
+		// Loop through cols
+		for(size_t j=0; j<jend; j+=dilation) {
+			// Copy value to dilated
+			y[i++] = x[k++];
+			//std::cerr << "copy\t y[" << i-1 << "] = " << y[i-1] << std::endl;
+			
+			// Assign value to dilated cols
+			for(size_t l=0; l<expand; l++) {
+				y[i++] = value;
+				//std::cerr << "dilate\t y[" << i-1 << "] = " << y[i-1] << std::endl;
+			}
+		}
+		// Copy value of last column
+		y[i++] = x[k++];
+		//std::cerr << "last\t y[" << i-1 << "] = " << y[i-1] << std::endl;
+
+		if(i<size) {
+			// Assign value to dilated rows
+			for(size_t l=0; l<stride; l++){
+				y[i++] = value;
+				//std::cerr << "row\t y[" << i-1 << "] = " << y[i-1] << std::endl;
+			}
+		}
+	}
+
+	return y;
 }
 
 #endif /* STDTENSOR_HPP */

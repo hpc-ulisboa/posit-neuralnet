@@ -24,46 +24,39 @@ struct Window{
 
 	// Used when you know the start and want to go forward
 	void output_to_input(	size_t const input_height0, size_t const input_width0,
-							size_t const kernel_height0, size_t const kernel_width0,
+							size_t const kernel_height, size_t const kernel_width,
 							size_t const stride=1, size_t const padding=0,
-							size_t const dilation_input=1, size_t const dilation_kernel=1	){
+							size_t const dilation_input=1, size_t dilation_weight=1	){
 
-		size_t const None = static_cast<size_t>(-1);
-
-		// Transform input
 		StdTensor<size_t> input_idx = sequence<size_t>({input_height0, input_width0});
 		if(dilation_input>1)
-			input_idx = dilate<size_t>(input_idx, dilation_input, None);
+			input_idx = dilate<size_t>(input_idx, dilation_input, -1);
 		if(padding>0)
-			input_idx = pad<size_t>(input_idx, padding, None);
+			input_idx = pad<size_t>(input_idx, padding, -1);
 
 		size_t const input_height = input_idx.shape()[0];
 		size_t const input_width = input_idx.shape()[1];
-
-		// Transform kernel
-		StdTensor<size_t> kernel_idx = sequence<size_t>({kernel_height0, kernel_width0});
-		if(dilation_kernel>1)
-			kernel_idx = dilate<size_t>(kernel_idx, dilation_kernel, None);
-
-		size_t const kernel_height = kernel_idx.shape()[0];
-		size_t const kernel_width = kernel_idx.shape()[1];
 	
 		// Calculate output dimensions
 		output_height = (input_height - kernel_height)/stride + 1;
 		output_width = (input_width - kernel_width)/stride + 1;
 		
+		//output_height = (input_height + dilation*(input_height-1) + 2*padding - kernel_height)/stride + 1;
+		//output_width = (input_width + dilation*(input_width-1) + 2*padding - kernel_width)/stride + 1;
+
 		// Clear window vectors
 		map_window.clear();
 		kernel_window.clear();
 		window_idx.clear();
 
 		// Reserve sizes for vectors
-		map_window.reserve(output_height * output_width * kernel_height0 * kernel_width0);
-		kernel_window.reserve(output_height * output_width * kernel_height0 * kernel_width0);
+		map_window.reserve(output_height * output_width * kernel_height * kernel_width);
+		kernel_window.reserve(output_height * output_width * kernel_height * kernel_width);
 		window_idx.reserve(output_height * output_width + 1);		// plus one to store size of vector
 
 		size_t const iend = input_height-kernel_height;
 		size_t const jend = input_width-kernel_width;
+		size_t const None = static_cast<size_t>(-1);
 		size_t size = 0;
 
 		// OUTPUT -> INPUT - MAP
@@ -80,12 +73,10 @@ struct Window{
 					for(size_t n=j, y=0; y<kernel_width; n++, y++){
 
 						// Push indices of input elements that overlap with kernel
-						size_t input_i = m*input_width+n;
-						size_t kernel_i = x*kernel_width+y;
-
-						if(input_idx[input_i]!=None && kernel_idx[kernel_i]!=None) {
-							map_window.push_back(input_idx[input_i]);
-							kernel_window.push_back(kernel_idx[kernel_i]);
+						size_t index = m*input_width+n;
+						if(input_idx[index] != None) {
+							map_window.push_back(input_idx[index]);
+							kernel_window.push_back(x*kernel_width+y);
 							size++;
 						}
 					}
@@ -156,7 +147,7 @@ struct Window{
 					for(size_t n=j, y=0; y<kernel_width; n++, y++){
 
 						// Push indices of input elements that overlap with kernel
-						size_t const index = m*input_width+n;
+						size_t index = m*input_width+n;
 						if(input_idx[index] != None) {
 							temp_map[input_idx[index]].push_back(output_idx);
 							temp_kernel[x*kernel_width+y].push_back(output_idx);

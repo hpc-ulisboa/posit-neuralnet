@@ -5,14 +5,28 @@
 #include <vector>
 
 // Custom headers
+#include "../tensor/MixedTensor.hpp"
 #include "../tensor/StdTensor.hpp"
 
 template <typename T>
 struct Parameter {
 	Parameter(StdTensor<T>& _weight, StdTensor<T>& _gradient) :
 		weight(_weight),
-		gradient(_gradient)
+		gradient(_gradient),
+		mixed_tensor(nullptr)
 	{ }
+
+	template <typename ForwardT, typename BackwardT>
+	Parameter(MixedTensor<T, ForwardT, BackwardT>& _weight, StdTensor<T>& _gradient) :
+		weight(_weight.get_optimizer()),
+		gradient(_gradient),
+		mixed_tensor(static_cast<TensorUpdater*>(&_weight))
+	{ }
+
+	void update() {
+		if(mixed_tensor != nullptr)
+			mixed_tensor->update();
+	};
 
 	friend std::ostream & operator << (std::ostream& out, const Parameter& parameter){
 		out << parameter.weight << std::endl;
@@ -21,6 +35,7 @@ struct Parameter {
 
 	StdTensor<T>& weight;
 	StdTensor<T>& gradient;
+	TensorUpdater* mixed_tensor;
 };
 
 /*

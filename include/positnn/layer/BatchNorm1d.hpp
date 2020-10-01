@@ -9,6 +9,7 @@
 #include "../tensor/matrix.hpp"
 #include "../tensor/sum.hpp"
 #include "../tensor/StdTensor.hpp"
+#include "../utils/Quire.hpp"
 
 // Namespaces
 using namespace sw::unum;
@@ -88,12 +89,12 @@ public:
 		StdTensor<Posit> temp1 = dot(delta, x_norm);
 		StdTensor<Posit> temp2 = sum_first(delta);
 
-		quire<Posit::nbits, Posit::es, Posit::nbits-1> q;
+		Quire<Posit::nbits, Posit::es> q;
 		for(size_t i=0, j=0, size=delta_1.size(); i<size; i++, j++) {
 			if(j>=num_features)
 				j=0;
-			q = sw::unum::quire_mul(delta[i], Posit(batch_size));
-			q -= sw::unum::quire_mul(x_norm[i], temp1[j]);
+			q = Quire_mul(delta[i], Posit(batch_size));
+			q -= Quire_mul(x_norm[i], temp1[j]);
 			q -= temp2[j];
 			convert(q.to_value(), delta_1[i]);
 		}
@@ -141,13 +142,13 @@ public:
 		size_t const batch_size = x.shape()[0];
 		
 		/*
-		quire<nbits, es, Posit::nbits-1> sum, sq_sum;
+		Quire<nbits, es> sum, sq_sum;
 
 		for(size_t i=0; i<num_features; i++){
 			sum = sq_sum = 0;
 			for(size_t j=i; j<size; j+=num_features){
 				sum += x[j];
-				sq_sum += quire_mul(x[j], x[j]);
+				sq_sum += Quire_mul(x[j], x[j]);
 			}
 			convert(sum.to_value(), mean[i]);
 			convert(sq_sum.to_value(), variance[i]);
@@ -159,7 +160,7 @@ public:
 		}
 		*/
 
-		quire<nbits, es, nbits-1> sum;
+		Quire<nbits, es> sum;
 
 		// Calculate mean
 		for(size_t i=0; i<num_features; i++){
@@ -177,7 +178,7 @@ public:
 			sum = 0;
 			for(size_t j=i; j<size; j+=num_features){
 				Posit delta = x[j] - mean[i];
-				sum += quire_mul(delta, delta);
+				sum += Quire_mul(delta, delta);
 			}
 			convert(sum.to_value(), variance[i]);
 

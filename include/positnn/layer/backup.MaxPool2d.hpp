@@ -25,11 +25,11 @@ public:
 
 	StdTensor<ForwardT> forward(StdTensor<ForwardT> const& x) {
 		input_shape = x.shape();
-		return maximumpool2d(x, kernel_size, stride, padding, &max_idx, &w);
+		return maximumpool2d(x, kernel_size, stride, padding, &max_idx, &w1);
 	}
 
 	StdTensor<BackwardT> backward(StdTensor<BackwardT> const& deltaN) {
-		return maximumpool2d_backward(deltaN, input_shape, kernel_size, stride, max_idx);
+		return maximumpool2d_backward(deltaN, input_shape, kernel_size, stride, padding, max_idx, &w2);
 	}
 
 private:
@@ -37,7 +37,7 @@ private:
 	size_t stride;
 	size_t padding;
 	std::vector<size_t> input_shape;
-	Window w;
+	Window w1, w2;
 	std::vector<size_t> max_idx;
 };
 

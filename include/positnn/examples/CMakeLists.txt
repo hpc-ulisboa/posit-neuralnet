@@ -71,6 +71,8 @@ include_directories("${CMAKE_CURRENT_LIST_DIR}/../universal/include")
 
 # Include PositNN (PyTorch for posits) ####################################
 include_directories("${CMAKE_CURRENT_LIST_DIR}/../positnn/include")
+# Quire mode (0 = disabled, 1 = old standard, 2 = new standard)
+add_definitions(-D QUIRE_MODE=2)
 ###########################################################################
 
 # Setup executables #######################################################

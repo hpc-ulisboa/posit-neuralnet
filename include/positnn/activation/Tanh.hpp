@@ -11,54 +11,52 @@
 // Namespaces
 using namespace sw::unum;
 
-template <typename Posit>
+template <typename ForwardT, typename BackwardT=ForwardT>
 class Tanh {
 public:	
 	Tanh() { }
 
-	StdTensor<Posit> forward(StdTensor<Posit>& x, bool approximate=true) {
-		constexpr size_t es = Posit::es;
-		output = StdTensor<Posit>(x.shape());
-
-		for(size_t i=0, size=output.size(); i<size; i++) {
-			if(approximate && es==0) {
-				output[i] = tanh_approx(x[i]);
+	StdTensor<ForwardT> forward(StdTensor<ForwardT> const& x, bool approximate=true) {
+		StdTensor<ForwardT> y(x.shape());
+		
+		for(size_t i=0, size=x.size(); i<size; i++) {
+			if(approximate && ForwardT::es==0) {
+				y[i] = tanh_approx(x[i]);
 			}
 			else {
-				Posit plus = exp(x[i]);
-				Posit minus = exp(-x[i]);
-				output[i] = (plus-minus)/(plus+minus);
+				ForwardT plus = exp(x[i]);
+				ForwardT minus = exp(-x[i]);
+				y[i] = (plus-minus)/(plus+minus);
 			}
 		}
 
-		return output;
+		output = y;
+
+		return y;
 	}
 
-	// CHANGE
-	StdTensor<Posit> backward(StdTensor<Posit>& w_delta) {
-		StdTensor<Posit> deltaN = derivative();
+	StdTensor<BackwardT> backward(StdTensor<BackwardT> const& w_delta) {
+		StdTensor<BackwardT> deltaN = derivative();
 		deltaN *= w_delta;
 		return deltaN;
 	}
 
-	// CHANGE
-	StdTensor<Posit> derivative() const {
+	StdTensor<BackwardT> derivative() const {
 		// TODO: protect against initialized output
-		StdTensor<Posit> dx(output);
+		StdTensor<BackwardT> dx(output.shape());
 
-		quire<Posit::nbits, Posit::es, Posit::nbits-1> q;
+		BackwardT pOne(1);
 
-		for(Posit& p : dx) {
-			q = 1;
-			q -= quire_mul(p, p);
-			convert(q.to_value(), p);
+		for(size_t i=0, size=dx.size(); i<size; i++) {
+			convert( fma(output[i], -output[i], pOne) ,
+					 dx[i] );
 		}
 		
 		return dx;
 	}
 
 private:
-	StdTensor<Posit> output;
+	StdTensor<BackwardT> output;
 };
 
 #endif /* TANH_HPP */
