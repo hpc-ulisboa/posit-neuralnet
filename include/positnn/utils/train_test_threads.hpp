@@ -106,7 +106,7 @@ void forward_backward(	Model<T>& model,
 	return;
 }
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void gradient_worker(	std::vector<Parameter<posit<nbits, es>>>& model_parameters,
 						std::vector<std::vector<StdTensor<posit<nbits, es>>>>& gradients,
 						size_t const elem_begin, size_t const nelem){
@@ -143,7 +143,7 @@ void gradient_worker(	std::vector<Parameter<posit<nbits, es>>>& model_parameters
 	return;
 }
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void sum_gradients(	std::vector<Parameter<posit<nbits, es>>>& model_parameters,
 					std::vector<std::vector<StdTensor<posit<nbits, es>>>>& gradients	){
 
@@ -173,7 +173,7 @@ void sum_gradients(	std::vector<Parameter<posit<nbits, es>>>& model_parameters,
 		size_t const nelem = (t < overloaded_workers) ?
 								worker_nelem+1 : worker_nelem;
 
-		workers_threads.push_back(std::thread(gradient_worker<nbits, es, capacity>,
+		workers_threads.push_back(std::thread(gradient_worker<nbits, es>,
 										std::ref(model_parameters), std::ref(gradients),
 										elem_begin, nelem));
 

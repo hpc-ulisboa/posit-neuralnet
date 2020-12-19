@@ -1,14 +1,5 @@
-#ifndef LENET5_POSIT_HPP
-#define LENET5_POSIT_HPP
-
-// Custom headers
-#include "positnn/activation/ReLU.hpp"
-#include "positnn/layer/BackScale.hpp"
-#include "positnn/layer/Conv2d.hpp"
-#include "positnn/layer/Layer.hpp"
-#include "positnn/layer/Linear.hpp"
-#include "positnn/layer/MaxPool2d.hpp"
-#include "positnn/tensor/StdTensor.hpp"
+// General headers
+#include <positnn/positnn>
 
 template <typename T>
 class LeNet5_posit : public Layer<typename T::Optimizer>{
@@ -17,10 +8,10 @@ public:
 		conv1(1, 6, 5, 1, 2),
 		conv2(6, 16, 5),
 		conv3(16, 120, 5),
-		max_pool1(2, 2),
-		max_pool2(2, 2),
 		fc1(120, 84),
-		fc2(84, 10)
+		fc2(84, 10),
+		max_pool1(2, 2),
+		max_pool2(2, 2)
 	{
 		this->register_module(conv1);
 		this->register_module(conv2);
@@ -28,62 +19,58 @@ public:
 		this->register_module(fc1);
 		this->register_module(fc2);
 	}
-
-	StdTensor<typename T::Forward> forward(StdTensor<typename T::Forward> x) {
+	
+	// Posit precisions
+	using O = typename T::Optimizer;
+	using F = typename T::Forward;
+	using B = typename T::Backward;
+	using G = typename T::Gradient;
+	
+	StdTensor<F> forward(StdTensor<F> x) {
 		x = conv1.forward(x);
 		x = max_pool1.forward(x);
 		x = relu1.forward(x);
-
+		
 		x = conv2.forward(x);
 		x = max_pool2.forward(x);
 		x = relu2.forward(x);
-
+		
 		x = conv3.forward(x);
 		x = relu3.forward(x);
-
+		
 		x.reshape({x.shape()[0], 120});
-
+		
 		x = fc1.forward(x);
 		x = relu4.forward(x);
-
+		
 		x = fc2.forward(x);
 		return x;
 	}
-
-	StdTensor<typename T::Backward> backward(StdTensor<typename T::Backward> x) {
+	
+	StdTensor<B> backward(StdTensor<B> x) {
 		x = fc2.backward(x);
-
+		
 		x = relu4.backward(x);
 		x = fc1.backward(x);
-
+		
 		x.reshape({x.shape()[0], 120, 1 ,1});
-
+		
 		x = relu3.backward(x);
 		x = conv3.backward(x);
-
+		
 		x = relu2.backward(x);
 		x = max_pool2.backward(x);
 		x = conv2.backward(x);
-
+		
 		x = relu1.backward(x);
 		x = max_pool1.backward(x);
 		x = conv1.backward(x);
-
 		return x;
 	}
-
+	
 private:
-	Conv2d<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> conv1;
-	Conv2d<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> conv2;
-	Conv2d<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> conv3;
-	MaxPool2d<typename T::Forward, typename T::Backward> max_pool1;
-	MaxPool2d<typename T::Forward, typename T::Backward> max_pool2;
-	Linear<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> fc1;
-	Linear<typename T::Optimizer, typename T::Forward, typename T::Backward, typename T::Gradient> fc2;
-	ReLU relu1;
-	ReLU relu2;
-	ReLU relu3;
-	ReLU relu4;
+	Conv2d<O, F, B, G> conv1, conv2, conv3;
+	Linear<O, F, B, G> fc1, fc2;
+	MaxPool2d<F, B> max_pool1, max_pool2;
+	ReLU relu1, relu2, relu3, relu4;
 };
-
-#endif /* LENET5_POSIT_HPP */

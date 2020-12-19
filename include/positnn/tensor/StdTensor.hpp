@@ -387,6 +387,30 @@ public:
 
 		return result;
 	}
+
+	// Returns true if this is in other, along axis 1
+	template <typename otherT>
+	StdTensor<unsigned char> in (StdTensor<otherT> const &other, size_t nelem=0) const {
+		StdTensor<unsigned char> result(m_shape);
+
+		if(nelem == 0)
+			nelem = other.shape()[1];
+
+		typename StdTensor<otherT>::const_iterator begin = other.begin();
+		typename StdTensor<otherT>::const_iterator end = other.begin()+nelem;
+		size_t stride = other.strides()[0];
+
+		for(size_t i=0; i<m_size; i++) {
+			if(std::find(begin, end, m_data[i]) != end) {
+				result[i] = 1;
+			}
+			
+			begin += stride;
+			end += stride;
+		}
+
+		return result;
+	}
 	
 	// Argmax along axis
 	template <typename argT=size_t>
@@ -420,6 +444,40 @@ public:
 		}
 
 		return argMaxTensor;
+	}
+	
+	// Indices of top-k elements along axis 1
+	template <typename argT=size_t>
+	StdTensor<argT> topk(const size_t k){
+		std::vector<size_t> new_shape = m_shape;
+		new_shape[1] = k;
+
+		StdTensor<argT> topkTensor(new_shape);
+
+		size_t const nelem = m_shape[1];
+
+		std::vector<argT> indices(nelem);
+		std::iota(indices.begin(), indices.end(), 0);
+
+		typename std::vector<argT>::const_iterator indices_begin = indices.begin(); 
+		typename std::vector<argT>::const_iterator indices_end = indices.end(); 
+
+		typename StdTensor<argT>::iterator topk_begin = topkTensor.begin();
+		typename StdTensor<argT>::iterator topk_end = topk_begin + k;
+
+		size_t i;
+		auto comp = [this, &i](const argT& left, const argT& right) {
+            return (m_data[i+left] > m_data[i+right]);
+        };
+
+		for(i=0; i<m_size; i+=nelem) {
+			std::partial_sort_copy(indices_begin, indices_end, topk_begin, topk_end, comp);
+
+			topk_begin = topk_end;
+			topk_end += k;
+		}
+
+		return topkTensor;
 	}
 
 	// Sum of all elements of tensor. To use quires in the sum, use matrix::sum() instead.

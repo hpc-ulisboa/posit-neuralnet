@@ -22,7 +22,7 @@
 // Namespaces
 using namespace sw::unum;
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void do_maxpool2d(	StdTensor<posit<nbits, es>> const& input,
 					posit<nbits, es>& output,
 					Window const& w, size_t* max_idx,
@@ -66,7 +66,7 @@ void do_maxpool2d(	StdTensor<posit<nbits, es>> const& input,
 
 #ifdef USING_LL_THREADS
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void maximumpool2d_thread(	StdTensor<posit<nbits, es>> const& input,
 							StdTensor<posit<nbits, es>>& output,
 							Window const* w, std::vector<size_t>* max_idx,
@@ -100,7 +100,7 @@ void maximumpool2d_thread(	StdTensor<posit<nbits, es>> const& input,
 				size_t* max_i = (empty_max) ? NULL : &((*max_idx)[output_idx]);
 
 				// Compute maximum pooling for that block
-				do_maxpool2d<nbits, es, capacity>(	input, output[output_idx],
+				do_maxpool2d<nbits, es>(	input, output[output_idx],
 													*w, max_i,
 													input_channel, idx	);
 			}
@@ -114,7 +114,7 @@ void maximumpool2d_thread(	StdTensor<posit<nbits, es>> const& input,
 	}
 }
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& input,
 											size_t const kernel_size,
 											size_t const stride,
@@ -176,7 +176,7 @@ StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& in
 		if(t < nthreads_more)
 			thread_samples++;
 
-		threads.push_back(std::thread(maximumpool2d_thread<nbits, es, capacity>,
+		threads.push_back(std::thread(maximumpool2d_thread<nbits, es>,
 										std::cref(input), std::ref(output),
 										w, max_idx,
 										input_samples_begin, output_samples_begin,
@@ -205,7 +205,7 @@ StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& in
 
 #else
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& input,
 											size_t const kernel_size,
 											size_t const stride,
@@ -260,7 +260,7 @@ StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& in
 				size_t* max_i = (empty_max) ? NULL : &((*max_idx)[output_idx]);
 
 				// Compute maximum pooling for that block
-				do_maxpool2d<nbits, es, capacity>(	input, output[output_idx],
+				do_maxpool2d<nbits, es>(	input, output[output_idx],
 													*w, max_i,
 													input_channel, idx	);
 			}
@@ -281,7 +281,7 @@ StdTensor<posit<nbits, es>> maximumpool2d(	StdTensor<posit<nbits, es>> const& in
 
 #endif /* USING_LL_THREADS */
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void do_maxpool2d_backward(	StdTensor<posit<nbits, es>> const& deltaN,
 							StdTensor<posit<nbits, es>>& deltaN_1, 
 							size_t const deltaN_channel,
@@ -353,7 +353,7 @@ void maximumpool2d_backward_thread1(	StdTensor<posit<nbits, es>> const& deltaN,
 	return;
 }
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void maximumpool2d_backward_thread2(	StdTensor<posit<nbits, es>> const& deltaN,
 										StdTensor<posit<nbits, es>>& deltaN_1,
 										std::vector<size_t> const& max_idx,
@@ -380,7 +380,7 @@ void maximumpool2d_backward_thread2(	StdTensor<posit<nbits, es>> const& deltaN,
 	return;
 }
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> maximumpool2d_backward(	StdTensor<posit<nbits, es>> const& deltaN,
 													std::vector<size_t> const& input_shape,
 													size_t const kernel_size, size_t const stride,
@@ -393,7 +393,7 @@ StdTensor<posit<nbits, es>> maximumpool2d_backward(	StdTensor<posit<nbits, es>> 
 							std::vector<size_t> const&,
 							size_t const, size_t const) = (first) ?
 								maximumpool2d_backward_thread1<nbits, es> :
-								maximumpool2d_backward_thread2<nbits, es, capacity>;
+								maximumpool2d_backward_thread2<nbits, es>;
 
 	StdTensor<posit<nbits, es>> deltaN_1(input_shape);
 	
@@ -437,7 +437,7 @@ StdTensor<posit<nbits, es>> maximumpool2d_backward(	StdTensor<posit<nbits, es>> 
 
 #else
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> maximumpool2d_backward(	StdTensor<posit<nbits, es>> const& deltaN,
 													std::vector<size_t> const& input_shape,
 													size_t const kernel_size, size_t const stride,

@@ -71,7 +71,7 @@ void write_posit(std::ostream& out, const Posit& p){
 
 		for(uint8_t i=0; i<8; i++){
 			one_byte <<= 1;
-			if(all_bytes[n+i])
+			if(n+i<nbits && all_bytes[n+i])
 				one_byte |= 0b1; 
 		}
 

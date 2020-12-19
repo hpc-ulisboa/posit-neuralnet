@@ -58,14 +58,17 @@ public:
 
 	template <typename PositFile=Posit>
 	void write(std::ostream& out) {
-		for(Parameter<Posit>& p : _parameters)
+		for(Parameter<Posit>& p : _parameters) {
 			p.weight.template write<PositFile>(out);
+		}
 	}
 
 	template <typename PositFile=Posit>
 	void read(std::istream& in) {
-		for(Parameter<Posit>& p : _parameters)
+		for(Parameter<Posit>& p : _parameters) {
 			p.weight.template read<PositFile>(in);
+			p.update();
+		}
 	}
 
 	void train() {

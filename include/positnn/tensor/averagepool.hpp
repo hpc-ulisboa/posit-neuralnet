@@ -22,7 +22,7 @@
 // Namespaces
 using namespace sw::unum;
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void do_avgpool2d(	StdTensor<posit<nbits, es>> const& input,
 					posit<nbits, es>& output,
 					Window const& w, size_t kernel_size,
@@ -64,7 +64,7 @@ void do_avgpool2d(	StdTensor<posit<nbits, es>> const& input,
 
 #ifdef USING_LL_THREADS
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void averagepool2d_thread(	StdTensor<posit<nbits, es>> const& input,
 							StdTensor<posit<nbits, es>>& output,
 							Window const* w, const size_t kernel_total_size,
@@ -94,7 +94,7 @@ void averagepool2d_thread(	StdTensor<posit<nbits, es>> const& input,
 			for(size_t idx=0; idx<size; idx++){
 
 				// Compute average pooling for that block
-				do_avgpool2d<nbits, es, capacity>(	input, output[output_channel+idx],
+				do_avgpool2d<nbits, es>(	input, output[output_channel+idx],
 													*w,	kernel_total_size,
 													input_channel, idx	);
 			}
@@ -108,7 +108,7 @@ void averagepool2d_thread(	StdTensor<posit<nbits, es>> const& input,
 	}
 }
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> averagepool2d(	StdTensor<posit<nbits, es>> const& input,
 											size_t const kernel_size,
 											size_t const stride,
@@ -167,7 +167,7 @@ StdTensor<posit<nbits, es>> averagepool2d(	StdTensor<posit<nbits, es>> const& in
 		if(t < nthreads_more)
 			thread_samples++;
 
-		threads.push_back(std::thread(averagepool2d_thread<nbits, es, capacity>,
+		threads.push_back(std::thread(averagepool2d_thread<nbits, es>,
 										std::cref(input), std::ref(output),
 										w, kernel_total_size,
 										input_samples_begin, output_samples_begin,
@@ -196,7 +196,7 @@ StdTensor<posit<nbits, es>> averagepool2d(	StdTensor<posit<nbits, es>> const& in
 
 #else
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> averagepool2d(	StdTensor<posit<nbits, es>> const& input,
 											size_t const kernel_size,
 											size_t const stride,
@@ -246,7 +246,7 @@ StdTensor<posit<nbits, es>> averagepool2d(	StdTensor<posit<nbits, es>> const& in
 			for(size_t idx=0; idx<size; idx++){
 
 				// Compute average pooling for that block
-				do_avgpool2d<nbits, es, capacity>(	input, output[output_channel+idx], *w,
+				do_avgpool2d<nbits, es>(	input, output[output_channel+idx], *w,
 													kernel_total_size, input_channel, idx	);
 			}
 				
@@ -266,7 +266,7 @@ StdTensor<posit<nbits, es>> averagepool2d(	StdTensor<posit<nbits, es>> const& in
 
 #endif /* USING_LL_THREADS */
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> averagepool2d_backward(	StdTensor<posit<nbits, es>> const& delta,
 													std::vector<size_t> const& input_shape,
 													size_t const kernel_size,
@@ -309,7 +309,7 @@ StdTensor<posit<nbits, es>> averagepool2d_backward(	StdTensor<posit<nbits, es>> 
 		for(size_t idx=0; idx<size; idx++) {
 
 			// Compute average pooling for that block
-			do_avgpool2d<nbits, es, capacity>(	delta, deltaN_1[input_channel+idx], *w,
+			do_avgpool2d<nbits, es>(	delta, deltaN_1[input_channel+idx], *w,
 												kernel_total_size, output_channel, idx	);
 		}
 

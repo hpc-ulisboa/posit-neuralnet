@@ -21,7 +21,7 @@ template <typename OptimizerT, typename BackwardT=OptimizerT, typename FactorsT=
 class BackScale {
 //class BackScale : public Layer<Posit> {
 public:
-	BackScale(size_t const _nlayers, BackScaleMode _mode=BackScaleMode::Loss, StatsT _momentum=0.1, bool _use_pow2=false) :
+	BackScale(size_t const _nlayers, BackScaleMode _mode=BackScaleMode::Loss, StatsT _momentum=0.9, bool _use_pow2=false) :
 		n(_nlayers, 1),
 		std(_nlayers, StatsT(1)),
 		running_std(_nlayers, StatsT(1)),
@@ -47,7 +47,9 @@ public:
 			if(state==setuping_with_scale && i+1<nlayers && !acc_scale[i+1].isone())
 				std[i] *= acc_scale[i+1];
 
-			running_std[i] = running_std[i]*(StatsT(1)-momentum) + std[i]*momentum;
+			running_std[i] = running_std[i]*momentum + std[i]*(StatsT(1)-momentum);
+
+			calculate_factors();
 		}
 
 		if((state==enabled || state==setuping_with_scale) && !scale[i].isone() && !scale[i].iszero())
@@ -57,7 +59,7 @@ public:
 	}
 
 	// Backward scale and correct gradients
-	StdTensor<BackwardT> backward(size_t const i, StdTensor<BackwardT>& x, std::vector<Parameter<OptimizerT>>& parameters) {
+	StdTensor<BackwardT> backward(size_t const i, StdTensor<BackwardT> x, std::vector<Parameter<OptimizerT>>& parameters) {
 		// Scale gradients
 		if((state==enabled || state==setuping_with_scale) && i+1<nlayers && !acc_scale[i+1].isone() && !scale[i+1].iszero()){
 			for(Parameter<OptimizerT>& p : parameters) {
@@ -89,8 +91,8 @@ public:
 	}
 
 	void calculate_factors() {
-		if(state!=setuping && state!=setuping_with_scale)
-			return;
+		//if(state!=setuping && state!=setuping_with_scale)
+		//	return;
 
 		switch(mode) {
 			case BackScaleMode::Loss:

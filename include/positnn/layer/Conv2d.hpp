@@ -32,13 +32,10 @@ public:
 		this->register_parameter(bias, bias_gradient);
 
 		reset_parameters();
-
-		if(dilation>1)
-			std::cerr << "ERROR: dilation of kernel in Conv2d is not supported yet" << std::endl;
 	}
 
 	void reset_parameters() {
-
+		std::cerr << "Conv2d layer is not initialized" << std::endl;
 	}
 
 	template <typename T>

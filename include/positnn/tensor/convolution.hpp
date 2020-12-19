@@ -23,7 +23,7 @@
 using namespace sw::unum;
 
 // Algorithm for a convolution
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void do_convolution(StdTensor<posit<nbits, es>> const& input,
 					StdTensor<posit<nbits, es>> const& kernel,
 					Quire<nbits, es>& output, Window const& w,
@@ -50,7 +50,7 @@ void do_convolution(StdTensor<posit<nbits, es>> const& input,
 
 #ifdef USING_LL_THREADS
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void convolution2d_thread(	StdTensor<posit<nbits, es>> const& input,
 							StdTensor<posit<nbits, es>> const& weight,
 							StdTensor<posit<nbits, es>> const& bias,
@@ -125,7 +125,7 @@ void convolution2d_thread(	StdTensor<posit<nbits, es>> const& input,
 	}
 }
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& input,
 											StdTensor<posit<nbits, es>> const& weight,
 											StdTensor<posit<nbits, es>> const& bias,
@@ -185,7 +185,7 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 		if(t < nthreads_more)
 			thread_samples++;
 
-		threads.push_back(std::thread(convolution2d_thread<nbits, es, capacity>,
+		threads.push_back(std::thread(convolution2d_thread<nbits, es>,
 										std::cref(input), std::cref(weight), std::cref(bias), std::ref(output), w,
 										input_samples_begin, output_samples_begin, thread_samples	));
 		
@@ -212,7 +212,7 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 
 #else
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& input,
 											StdTensor<posit<nbits, es>> const& weight,
 											StdTensor<posit<nbits, es>> const& bias,
@@ -313,7 +313,7 @@ StdTensor<posit<nbits, es>> convolution2d(	StdTensor<posit<nbits, es>> const& in
 
 #ifdef USING_LL_THREADS
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void convolution2d_gradient_thread(	StdTensor<posit<nbits, es>> const& input,
 									StdTensor<posit<nbits, es>> const& delta,
 									StdTensor<posit<nbits, es>>& dweight,
@@ -410,7 +410,7 @@ void convolution2d_gradient_thread(	StdTensor<posit<nbits, es>> const& input,
 	}
 }
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> convolution2d_gradient(
 												StdTensor<posit<nbits, es>> const& input,
 												StdTensor<posit<nbits, es>> const& delta,
@@ -459,7 +459,7 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 		if(t < nthreads_more)
 			thread_samples++;
 
-		threads.push_back(std::thread(convolution2d_gradient_thread<nbits, es, capacity>,
+		threads.push_back(std::thread(convolution2d_gradient_thread<nbits, es>,
 										std::cref(input), std::cref(delta), std::ref(dweight), w,
 										dweight_begin, thread_samples	));
 		
@@ -480,7 +480,7 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 
 #else
 
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> convolution2d_gradient(
 												StdTensor<posit<nbits, es>> const& input,
 												StdTensor<posit<nbits, es>> const& delta,

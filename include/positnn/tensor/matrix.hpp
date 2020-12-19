@@ -46,7 +46,7 @@ StdTensor<T> transpose(const StdTensor<T>& a, const size_t block=4){
 }
 
 // Function that implements fused product (by constant) and add
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void fused(	StdTensor<posit<nbits, es>>& a,
 			const StdTensor<posit<nbits, es>>& b,
 			const posit<nbits, es> alpha,
@@ -74,7 +74,7 @@ void fused(	StdTensor<posit<nbits, es>>& a,
 
 // Function that implements fused product (by constant) and add
 // c = a * alpha + b
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void fused(	const StdTensor<posit<nbits, es>>& a,
 			const StdTensor<posit<nbits, es>>& b,
 			StdTensor<posit<nbits, es>>& c,
@@ -97,7 +97,7 @@ void fused(	const StdTensor<posit<nbits, es>>& a,
 #ifdef USING_LL_THREADS
 
 // Function to be executed by each thread to sum along axis
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void dot_thread (	const StdTensor<posit<nbits, es>>& a,
 					const StdTensor<posit<nbits, es>>& b,
 					StdTensor<posit<nbits, es>>& c,
@@ -133,7 +133,7 @@ void dot_thread (	const StdTensor<posit<nbits, es>>& a,
 }
 
 // Matrix sum along axis using threads
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> dot(const StdTensor<posit<nbits, es>>& a,
 								const StdTensor<posit<nbits, es>>& b,
 								const size_t axis=0){
@@ -185,7 +185,7 @@ StdTensor<posit<nbits, es>> dot(const StdTensor<posit<nbits, es>>& a,
 			i_end += nblocks*loop_stride;
 		}
 		
-		threads.push_back(std::thread(dot_thread<nbits, es, capacity>,
+		threads.push_back(std::thread(dot_thread<nbits, es>,
 										std::cref(a), std::cref(b), std::ref(c),
 										i_begin, i_end,
 										j_begin, j_end,
@@ -212,7 +212,7 @@ StdTensor<posit<nbits, es>> dot(const StdTensor<posit<nbits, es>>& a,
 #else
 
 // Matrix sum along axis
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> dot(const StdTensor<posit<nbits, es>>& a,
 								const StdTensor<posit<nbits, es>>& b,
 								const size_t axis=0){
@@ -249,7 +249,7 @@ StdTensor<posit<nbits, es>> dot(const StdTensor<posit<nbits, es>>& a,
 #ifdef USING_LL_THREADS
 
 // Function to be executed by each thread to multiply rows
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void matmul_row_thread (const StdTensor<posit<nbits, es>>& a,
 						const StdTensor<posit<nbits, es>>& b,
 						StdTensor<posit<nbits, es>>& c,
@@ -287,7 +287,7 @@ void matmul_row_thread (const StdTensor<posit<nbits, es>>& a,
 }
 
 // Matrix multiplication of rows using threads. Equivalent to A * B^T
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> matmul_row (const StdTensor<posit<nbits, es>>& a, const StdTensor<posit<nbits, es>>& b){
 	// TODO: THROW ERROR IF MATRIX DIMENSIONS ARE INVALID
 	const size_t rows = a.shape()[0];
@@ -328,7 +328,7 @@ StdTensor<posit<nbits, es>> matmul_row (const StdTensor<posit<nbits, es>>& a, co
 			b_end -= cols;
 		}
 
-		threads.push_back(std::thread(matmul_row_thread<nbits, es, capacity>,
+		threads.push_back(std::thread(matmul_row_thread<nbits, es>,
 										std::cref(a), std::cref(b), std::ref(c),
 										a_begin*stride, a_end*stride,
 										b_begin*stride, b_end*stride, b_size,
@@ -347,7 +347,7 @@ StdTensor<posit<nbits, es>> matmul_row (const StdTensor<posit<nbits, es>>& a, co
 #else
 
 // Matrix multiplication of rows. Equivalent to A * B^T
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> matmul_row(const StdTensor<posit<nbits, es>>& a, const StdTensor<posit<nbits, es>>& b){
 	// TODO: THROW ERROR IF MATRIX DIMENSIONS ARE INVALID
 	StdTensor<posit<nbits, es>> c({a.shape()[0], b.shape()[0]});
@@ -378,7 +378,7 @@ StdTensor<posit<nbits, es>> matmul_row(const StdTensor<posit<nbits, es>>& a, con
 #ifdef USING_LL_THREADS
 
 // Function to be executed by each thread to multiply rows
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void matmul_row_add_thread (const StdTensor<posit<nbits, es>>& a,
 							const StdTensor<posit<nbits, es>>& b,
 							const StdTensor<posit<nbits, es>>& c,
@@ -422,7 +422,7 @@ void matmul_row_add_thread (const StdTensor<posit<nbits, es>>& a,
 }
 
 // Matrix multiplication of rows and addition. Equivalent to D = A * B^T + C
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> matmul_row_add(const StdTensor<posit<nbits, es>>& a, const StdTensor<posit<nbits, es>>& b, const StdTensor<posit<nbits, es>>& c){
 	// TODO: THROW ERROR IF MATRIX DIMENSIONS ARE INVALID
 	const size_t rows = a.shape()[0];
@@ -473,7 +473,7 @@ StdTensor<posit<nbits, es>> matmul_row_add(const StdTensor<posit<nbits, es>>& a,
 
 		//std::cerr << "a_begin=" << a_begin << " a_end=" << a_end << " b_begin=" << b_begin << " b_end=" << b_end << " c_begin=" << c_begin << " c_size=" << c_size << " d_begin=" << d_begin << " stride=" << stride << std::endl;
 	
-		threads.push_back(std::thread(matmul_row_add_thread<nbits, es, capacity>,
+		threads.push_back(std::thread(matmul_row_add_thread<nbits, es>,
 										std::cref(a), std::cref(b), std::cref(c), std::ref(d),
 										a_begin*stride, a_end*stride,
 										b_begin*stride, b_end*stride, b_size,
@@ -493,7 +493,7 @@ StdTensor<posit<nbits, es>> matmul_row_add(const StdTensor<posit<nbits, es>>& a,
 #else
 
 // Matrix multiplication of rows and addition. Equivalent to D = A * B^T + C
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> matmul_row_add(const StdTensor<posit<nbits, es>>& a, const StdTensor<posit<nbits, es>>& b, const StdTensor<posit<nbits, es>>& c){
 	// TODO: THROW ERROR IF MATRIX DIMENSIONS ARE INVALID
 	StdTensor<posit<nbits, es>> d({a.shape()[0], b.shape()[0]});
@@ -525,33 +525,33 @@ StdTensor<posit<nbits, es>> matmul_row_add(const StdTensor<posit<nbits, es>>& a,
 
 // Inline functions
 // Matrix multiplication
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 inline StdTensor<posit<nbits, es>> matmul (const StdTensor<posit<nbits, es>>& a, const StdTensor<posit<nbits, es>>& b) {
 	StdTensor<posit<nbits, es>> bT = transpose(b);
-	return matmul_row<nbits, es, capacity>(a, bT);
+	return matmul_row<nbits, es>(a, bT);
 }
 
 // Matrix multiplication of columns. Equivalent to A^T * B
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 inline StdTensor<posit<nbits, es>> matmul_col (const StdTensor<posit<nbits, es>>& a, const StdTensor<posit<nbits, es>>& b) {
 	StdTensor<posit<nbits, es>> aT = transpose(a);
 	StdTensor<posit<nbits, es>> bT = transpose(b);
-	return matmul_row<nbits, es, capacity>(aT, bT);
+	return matmul_row<nbits, es>(aT, bT);
 }
 
 // Matrix multiplication and addition. Equivalent to D = A * B + C
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 inline StdTensor<posit<nbits, es>> matmul_add (const StdTensor<posit<nbits, es>>& a, const StdTensor<posit<nbits, es>>& b, const StdTensor<posit<nbits, es>>& c) {
 	StdTensor<posit<nbits, es>> bT = transpose(b);
-	return matmul_row_add<nbits, es, capacity>(a, bT, c);
+	return matmul_row_add<nbits, es>(a, bT, c);
 }
 
 // Matrix multiplication of columns and addition. Equivalent to D = A^T * B + C
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 inline StdTensor<posit<nbits, es>> matmul_col_add (const StdTensor<posit<nbits, es>>& a, const StdTensor<posit<nbits, es>>& b, const StdTensor<posit<nbits, es>>& c) {
 	StdTensor<posit<nbits, es>> aT = transpose(a);
 	StdTensor<posit<nbits, es>> bT = transpose(b);
-	return matmul_row_add<nbits, es, capacity>(aT, bT, c);
+	return matmul_row_add<nbits, es>(aT, bT, c);
 }
 
 /* OLD

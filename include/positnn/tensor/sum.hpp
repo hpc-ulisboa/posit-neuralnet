@@ -24,7 +24,7 @@ using namespace sw::unum;
 #ifdef USING_LL_THREADS
 
 // Function to be executed by each thread to sum first axis
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void sum_first_thread(	StdTensor<posit<nbits, es>> const& input,
 						StdTensor<posit<nbits, es>>& output,
 						size_t const i_begin, size_t const nelem	){
@@ -51,7 +51,7 @@ void sum_first_thread(	StdTensor<posit<nbits, es>> const& input,
 }
 
 // Matrix sum along first axis using threads
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> sum_first (const StdTensor<posit<nbits, es>>& input){
 	std::vector<size_t> new_shape;
 	
@@ -78,7 +78,7 @@ StdTensor<posit<nbits, es>> sum_first (const StdTensor<posit<nbits, es>>& input)
 		if(t < nthreads_more)
 			nelem++;
 
-		threads.push_back(std::thread(sum_first_thread<nbits, es, capacity>,
+		threads.push_back(std::thread(sum_first_thread<nbits, es>,
 										std::cref(input), std::ref(output),
 										i_begin, nelem));
 
@@ -95,7 +95,7 @@ StdTensor<posit<nbits, es>> sum_first (const StdTensor<posit<nbits, es>>& input)
 #else
 
 // Matrix sum along first axis
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> sum_first(const StdTensor<posit<nbits, es>>& input){
 	std::vector<size_t> new_shape;
 	
@@ -131,7 +131,7 @@ StdTensor<posit<nbits, es>> sum_first(const StdTensor<posit<nbits, es>>& input){
 #ifdef USING_LL_THREADS
 
 // Function to be executed by each thread to sum last two axes
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 void sum_last2_thread(	StdTensor<posit<nbits, es>> const& input,
 						StdTensor<posit<nbits, es>>& output,
 						size_t const input_begin, size_t const output_begin,
@@ -164,7 +164,7 @@ void sum_last2_thread(	StdTensor<posit<nbits, es>> const& input,
 }
 
 // Sum of last two axes using threads
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> sum_last2 (const StdTensor<posit<nbits, es>>& input){
 	// TODO: THROW ERROR IF SUM DIMENSIONS ARE INVALID
 	
@@ -195,7 +195,7 @@ StdTensor<posit<nbits, es>> sum_last2 (const StdTensor<posit<nbits, es>>& input)
 		if(t < nthreads_more)
 			nelem++;
 
-		threads.push_back(std::thread(sum_last2_thread<nbits, es, capacity>,
+		threads.push_back(std::thread(sum_last2_thread<nbits, es>,
 										std::cref(input), std::ref(output),
 										input_begin, output_begin, nelem));
 
@@ -217,7 +217,7 @@ StdTensor<posit<nbits, es>> sum_last2 (const StdTensor<posit<nbits, es>>& input)
 #else
 
 // Sum of last two axes
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> sum_last2(StdTensor<posit<nbits, es>> const& input) {
 	// TODO: error if dim < 2
 
@@ -260,7 +260,7 @@ StdTensor<posit<nbits, es>> sum_last2(StdTensor<posit<nbits, es>> const& input) 
 /*
 
 // Matrix sum along axis
-template <size_t nbits, size_t es, size_t capacity=nbits-1>
+template <size_t nbits, size_t es>
 StdTensor<posit<nbits, es>> sum(const StdTensor<posit<nbits, es>>& a, const size_t axis=0){
 // ERROR: LOOP J IS NOT CORRECT
 	// constexpr size_t nbits = T::nbits;
