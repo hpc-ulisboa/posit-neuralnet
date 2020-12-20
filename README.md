@@ -34,7 +34,7 @@ Folder "examples" includes: example of CMakeLists.txt for a project, an example 
 
 ### Requirements
 
-- <a href="https://github.com/stillwater-sc/universal" target="_blank">stillwater-sc/universal</a>
+- <a href="https://github.com/gonced8/universal" target="_blank">Fork from stillwater-sc/universal: gonced8/universal</a>
 - <a href="https://pytorch.org/get-started/locally/" target="_blank">PyTorch for C++ (LibTorch)</a>
 - <a href="https://github.com/hpc-ulisboa/posit-neuralnet" target="_blank">PositNN (this library)</a>
 - cmake >= v3
@@ -43,62 +43,65 @@ Folder "examples" includes: example of CMakeLists.txt for a project, an example 
 
 ### Setup
 
-- Clone stillwater-sc/universal repository
-```shell
-$ git clone https://github.com/stillwater-sc/universal.git
-```
-
-- Download appropriate PyTorch for C++ (LibTorch) and unzip
-
-<a href="https://pytorch.org/get-started/locally/" target="_blank">https://pytorch.org/get-started/locally/</a>
-
 - Clone this repository
 ```shell
 $ git clone https://github.com/hpc-ulisboa/posit-neuralnet.git
 ```
+
+- Clone gonced8/universal repository inside include folder
+```shell
+$ cd posit-neuralnet/include
+$ git clone https://github.com/gonced8/universal.git
+```
+
+- Download appropriate PyTorch for C++ (LibTorch) and unzip also inside include folder
+
+<a href="https://pytorch.org/get-started/locally/" target="_blank">https://pytorch.org/get-started/locally/</a>
+
+
 
 ---
 
 ## Features
 - Use any posit configuration
 - Activation functions: ReLU, Sigmoid, Tanh
-- Layers: Batch Normalization, Convolution, Fully-Connected, Pooling (average and max)
+- Layers: Batch Normalization, Convolution, Dropout, Linear (Fully-Connected), Pooling (average and max)
 - Loss functions: Cross-Entropy, Mean Squared Error
 - Optimizer: SGD
 - Tensor class: StdTensor
-- Multithreading
+- Parallelization: multithreading with std::thread
 
 ## Usage
 - Copy the CMakeLists.txt inside examples and adapt to your setup, namely, the directories of universal and PositNN, and number of threads
 - Build your project
 ```shell
 $ mkdir build; cd build
-$ cmake .. -DCMAKE_PREFIX_PATH="../../libtorch"
+$ cmake .. -DCMAKE_PREFIX_PATH="/path/to/libtorch"
 $ make
 ```
 ## Tests
 
-To check if everything is installed correctly, you can try one of the examples. The following steps describe how to test the mnist_lenet5 example.
+To check if everything is installed correctly, you can try one of the examples. The following steps describe how to test the mnist_fcnn example.
 
 - Go to the project folder
 ```shell
-$ cd examples/mnist_lenet5
+$ cd examples/mnist_fcnn
 ```
-- (Optional) Edit CMakeLists.txt to your configuration. Configure positnn and universal path. The one given assumes that universal folder is at the repository root directory, that is, from your current path:
+- (Optional) Edit CMakeLists.txt to your configuration. Configure positnn and universal path. The one given assumes that they are both inside the include folder at the repository root directory, that is, from your current path:
 ```shell
 ../../include
-../../universal/include
+../../include/universal/include
 ```
-- Build project. Specify absolute path to PyTorch (LibTorch) folder. This example assumes that the folder is at the repository root directory.
+- Build the project. Specify absolute path to PyTorch (LibTorch) folder. This example assumes that the folder is also inside the include folder.
 ```shell
 $ mkdir build; cd build
-$ cmake .. -DCMAKE_PREFIX_PATH="/home/gonced8/posit-neuralnet/libtorch"
+$ cmake .. -DCMAKE_PREFIX_PATH="/home/gonced8/posit-neuralnet/include/libtorch"
 $ make
 ```
 
 - Run program. If you're saving the models, make sure the appropriate output folder exists.
 ```shell
-$ ./train_test
+$ ./train_posit
 ```
 
 ---
@@ -111,11 +114,11 @@ If you'd like to get involved, e-mail me at gonced8@gmail.com
 
 ## Team
 ### Student
-- Gonçalo Eduardo Cascalho Raposo - @gonced8
+- Gonçalo Eduardo Cascalho Raposo - <a href="https://github.com/gonced8" target="_blank">@gonced8</a>
 
 ### Supervisors
 - Prof. Nuno Roma
-- Prof. Pedro Tomás - @pedrotomas
+- Prof. Pedro Tomás - <a href="https://github.com/pedrotomas" target="_blank">@pedrotomas</a>
 ---
 
 ## Support
