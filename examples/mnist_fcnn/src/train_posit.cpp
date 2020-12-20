@@ -24,7 +24,7 @@ using Posit = posit<8, 2>;
 #define DATASET_PATH				"../dataset"
 
 // Load
-#define NET_LOAD_FILENAME_POSIT		"../net/example/model_epoch_0_float.pt"
+#define NET_LOAD_FILENAME_FLOAT		"../net/example/model_epoch_0_float.pt"
 #define NET_LOAD_FILENAME_POSIT		"../net/example/model_epoch_0_posit.dat"
 
 // Save
