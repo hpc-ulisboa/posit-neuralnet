@@ -6,6 +6,7 @@
 #include <iostream>
 #include <universal/posit/posit>
 #include <vector>
+#include <iterator>
 
 // Namespaces
 using namespace sw::unum;

@@ -570,6 +570,30 @@ StdTensor<posit<nbits, es>> convolution2d_gradient(
 
 #endif /* USING_LL_THREADS */
 
+// When the forward floor division is not exact (e.g. kernel 3, stride 2), the
+// gradient window of convolution2d_gradient is up to stride-1 too large in each
+// spatial dimension, so the returned kernel gradient is oversized (4x4 instead of
+// 3x3). The extra rows and columns belong to kernel positions that the forward
+// pass never produced; the real gradient is the top-left kernel_h x kernel_w
+// block. Crops to that block, no-op if the shape already matches.
+template <typename T>
+StdTensor<T> crop_weight_gradient(StdTensor<T> const& g, size_t const kernel_h, size_t const kernel_w) {
+	size_t const out_c = g.shape()[0];
+	size_t const in_c  = g.shape()[1];
+
+	if(g.shape()[2] == kernel_h && g.shape()[3] == kernel_w)
+		return g;
+
+	StdTensor<T> cropped({out_c, in_c, kernel_h, kernel_w});
+	for(size_t oc=0; oc<out_c; oc++)
+		for(size_t ic=0; ic<in_c; ic++)
+			for(size_t a=0; a<kernel_h; a++)
+				for(size_t b=0; b<kernel_w; b++)
+					cropped[{oc, ic, a, b}] = g[{oc, ic, a, b}];
+
+	return cropped;
+}
+
 template <typename T>
 StdTensor<T> rotate_weight(StdTensor<T> const& input) {
 	StdTensor<T> output({	input.shape()[1],

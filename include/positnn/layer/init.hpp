@@ -40,27 +40,28 @@ void set_uniform(StdTensor<T>& a, const float lb=0, const float ub=1){
 enum class Mode {fan_in, fan_out};
 enum class NonLinearity {linear, conv1d, conv2d, conv3d, conv_transpose1d, conv_transpose2d, conv_transpose3d, sigmoid, tanh, relu, leaky_relu};
 
+// Same as torch.nn.init._calculate_fan_in_and_fan_out. The weight layout is
+// (out_channels, in_channels, ...), so dimension 0 gives the number of output
+// feature maps and dimension 1 the number of input ones. Everything past the
+// first two is the receptive field, i.e. kernel_h * kernel_w for a 2D
+// convolution, and it belongs in both fans.
 template <typename T, typename randT>
 randT calculate_correct_fan(StdTensor<T>& tensor, const Mode mode) {
-    size_t num_input_fmaps = tensor.shape()[0];
-    size_t num_output_fmaps = tensor.shape()[1];
-    size_t receptive_field_size = 1;
+	if(tensor.dim() < 2)
+		return randT(tensor.size());
 
-	// TODO: SETUP FOR MORE THAN 2 DIMENSIONS
-	/*
-    if (tensor.dim() > 2) {
-        receptive_field_size = tensor[0][0].numel()
-	}
-	*/
+	size_t const num_output_fmaps = tensor.shape()[0];
+	size_t const num_input_fmaps  = tensor.shape()[1];
 
-	size_t fan;
+	size_t receptive_field_size = 1;
+	for(size_t d=2, n=tensor.dim(); d<n; d++)
+		receptive_field_size *= tensor.shape()[d];
 
-	if(mode==Mode::fan_in)
-		fan = num_input_fmaps * receptive_field_size;
-	else
-    	fan = num_output_fmaps * receptive_field_size;
+	size_t const fan = (mode==Mode::fan_in)
+	                 ? num_input_fmaps  * receptive_field_size
+	                 : num_output_fmaps * receptive_field_size;
 
-    return randT(fan);
+	return randT(fan);
 }
 
 template <typename randT>

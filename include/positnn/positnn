@@ -15,6 +15,7 @@
 #include "layer/BatchNorm1d.hpp"
 #include "layer/BackScale.hpp"
 #include "layer/Conv2d.hpp"
+#include "layer/Transposed_Conv2d.hpp"
 #include "layer/Dropout.hpp"
 #include "layer/init.hpp"
 #include "layer/Layer.hpp"
@@ -32,11 +33,13 @@
 #include "optimizer/Optimizer.hpp"
 #include "optimizer/SGD.hpp"
 #include "optimizer/SGDMixed.hpp"
+#include "optimizer/Adam.hpp"
 
 // Tensor (StdTensor) and operations
 #include "tensor/averagepool.hpp"
 #include "tensor/convert.hpp"
 #include "tensor/convolution.hpp"
+#include "tensor/transposed_convolution.hpp"
 #include "tensor/matrix.hpp"
 #include "tensor/maximumpool.hpp"
 #include "tensor/MixedTensor.hpp"
